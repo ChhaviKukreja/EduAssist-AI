@@ -1,6 +1,7 @@
 require('dotenv').config();
 const mongoose = require("mongoose");
 const mongoUri = process.env.MONGO_URI;
+// const multer = require('multer');
 mongoose.connect(mongoUri);
 
 const teacherSchema = new mongoose.Schema({
@@ -25,7 +26,11 @@ const assignmentSchema = new mongoose.Schema({
     title: String,
     description: String,
     uploadedBy: String, // Teacher ID
-    dueDate: Date
+    dueDate: Date,
+    pdf: {
+      data: String,
+      contentType: String
+    }
 });
 
 const submissionSchema = new mongoose.Schema({
@@ -42,7 +47,10 @@ const submissionSchema = new mongoose.Schema({
 const Submission = mongoose.model("Submission", submissionSchema);
 const Assignment = mongoose.model("Assignment", assignmentSchema);
 const Teacher = mongoose.model("Teacher", teacherSchema);
-const Student = mongoose.model("Student", studentSchema)
+const Student = mongoose.model("Student", studentSchema);
+
+// const storage = multer.memoryStorage();
+// const upload = multer({ storage: storage });
 
 module.exports = {
     Teacher,

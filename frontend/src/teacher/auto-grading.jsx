@@ -11,9 +11,14 @@ const AutoGrade = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showNewAssignmentForm, setShowNewAssignmentForm] = useState(false);
   const [isProcessingGrades, setIsProcessingGrades] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [fileName, setFileName] = useState('');
-  const fileInputRef = useRef(null);
+  const [formInputs, setFormInputs] = useState({
+    title: '',
+    description: '',
+    uploadedBy: '',
+    dueDate: ''
+  });
 
   // Sample data
   const [assignments, setAssignments] = useState([
@@ -55,45 +60,86 @@ const AutoGrade = () => {
 
   // Action handlers
 
+  //const [fileName, setFileName] = useState('');
+  const fileInputRef = useRef(null);
+
   // Trigger hidden input on "browse" click
   const handleBrowseClick = () => {
     fileInputRef.current.click();
   };
 
-  // Handle file selection
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && file.type === 'application/pdf') {
+      setSelectedFile(file);
       setFileName(file.name);
       console.log('File selected:', file.name);
-      // TODO: Upload logic here if needed
     } else {
       alert('Please select a PDF file.');
     }
   };
 
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(true);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormInputs({
+      ...formInputs,
+      [name]: value
+    });
   };
 
-  const handleDragLeave = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-  };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+    if (!selectedFile) {
+      alert('Please select a PDF file before submitting.');
+      return;
+    }
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      setAssignments(file);
-      console.log('Dropped file:', file);
+    try {
+      const formData = new FormData();
+      formData.append('title', formInputs.title);
+      formData.append('description', formInputs.description);
+      formData.append('uploadedBy', formInputs.uploadedBy);
+      formData.append('dueDate', formInputs.dueDate);
+      formData.append('pdf', selectedFile);
+
+      const response = await fetch('http://localhost:5000/teacher/assignments', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload assignment');
+      }
+
+      const data = await response.json();
+
+      // Add the newly uploaded assignment to the list
+      const newAssignment = {
+        id: assignments.length + 1, // You might use data._id from backend
+        title: formInputs.title,
+        dueDate: formInputs.dueDate,
+        status: 'active',
+        totalSubmissions: 0,
+        pendingGrading: 0
+      };
+
+      setAssignments([...assignments, newAssignment]);
+      alert('Assignment uploaded successfully!');
+
+      // Reset the form
+      setFormInputs({
+        title: '',
+        description: '',
+        uploadedBy: '',
+        dueDate: ''
+      });
+      setSelectedFile(null);
+      setFileName('');
+      setShowNewAssignmentForm(false);
+    } catch (error) {
+      console.error('Error uploading assignment:', error);
+      alert('Failed to upload assignment.');
     }
   };
 
@@ -181,33 +227,21 @@ const AutoGrade = () => {
               </tr>
             </thead>
             <tbody>
-              {assignments.map((assignment) => (
+              {assignments.map(assignment => (
                 <tr key={assignment.id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">
-                    {assignment.title}
-                  </td>
+                  <td className="px-4 py-3 font-medium">{assignment.title}</td>
+                  <td className="px-4 py-3">{assignment.dueDate}</td>
                   <td className="px-4 py-3">
-                    {assignment.dueDate}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-1 rounded text-sm ${assignment.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                        }`}
-                    >
+                    <span className={`px-2 py-1 rounded text-sm ${assignment.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
                       {assignment.status === 'active' ? 'Active' : 'Closed'}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col">
                       <span>{assignment.totalSubmissions} total</span>
-                      {assignment.pendingGrading > 0 ? (
-                        <span className="text-amber-600 text-sm">
-                          {assignment.pendingGrading} pending grading
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 text-sm">No pending grading</span>
+                      {assignment.pendingGrading > 0 && (
+                        <span className="text-amber-600 text-sm">{assignment.pendingGrading} pending grading</span>
                       )}
                     </div>
                   </td>
@@ -226,13 +260,102 @@ const AutoGrade = () => {
                   </td>
                 </tr>
               ))}
-
             </tbody>
           </table>
         </div>
       </div>
     );
+
   };
+
+  // const renderNewAssignmentForm = () => {
+  //   return (
+  //     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  //       <div className="bg-white p-6 rounded-lg w-96 relative">
+  //         <button
+  //           className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+  //           onClick={() => setShowNewAssignmentForm(false)}
+  //         >
+  //           &times;
+  //         </button>
+  //         <h2 className="text-lg font-semibold mb-4">Create New Assignment</h2>
+  //         <form onSubmit={handleSubmit}>
+  //           <div className="mb-4">
+  //             <label className="block mb-1 font-medium">Title</label>
+  //             <input
+  //               type="text"
+  //               name="title"
+  //               value={formInputs.title}
+  //               onChange={handleInputChange}
+  //               className="w-full px-3 py-2 border rounded"
+  //               required
+  //             />
+  //           </div>
+  //           <div className="mb-4">
+  //             <label className="block mb-1 font-medium">Description</label>
+  //             <textarea
+  //               name="description"
+  //               value={formInputs.description}
+  //               onChange={handleInputChange}
+  //               className="w-full px-3 py-2 border rounded"
+  //               rows={3}
+  //             />
+  //           </div>
+  //           <div className="mb-4">
+  //             <label className="block mb-1 font-medium">Uploaded By</label>
+  //             <input
+  //               type="text"
+  //               name="uploadedBy"
+  //               value={formInputs.uploadedBy}
+  //               onChange={handleInputChange}
+  //               className="w-full px-3 py-2 border rounded"
+  //               required
+  //             />
+  //           </div>
+  //           <div className="mb-4">
+  //             <label className="block mb-1 font-medium">Due Date</label>
+  //             <input
+  //               type="date"
+  //               name="dueDate"
+  //               value={formInputs.dueDate}
+  //               onChange={handleInputChange}
+  //               className="w-full px-3 py-2 border rounded"
+  //               required
+  //             />
+  //           </div>
+  //           <div className="mb-4">
+  //             <label className="block mb-1 font-medium">Upload PDF</label>
+  //             <input
+  //               type="file"
+  //               accept=".pdf"
+  //               onChange={handleFileChange}
+  //               className="w-full"
+  //               required
+  //             />
+  //             {fileName && <p className="text-sm text-gray-500 mt-1">{fileName}</p>}
+  //           </div>
+  //           <div className="flex justify-end">
+  //             <button
+  //               type="submit"
+  //               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+  //             >
+  //               Submit
+  //             </button>
+  //           </div>
+  //         </form>
+  //       </div>
+  //     </div>
+  //   );
+  // };
+
+  //   return (
+  //     <div className="p-6 bg-gray-100 min-h-screen">
+  //       {renderAssignmentsTab()}
+  //       {showNewAssignmentForm && renderNewAssignmentForm()}
+  //     </div>
+  //   );
+  // };
+
 
   const renderSubmissionsTab = () => {
     return (
@@ -242,7 +365,7 @@ const AutoGrade = () => {
           <div className="flex space-x-3">
             <select className="border rounded px-3 py-2">
               <option>All Assignments</option>
-              {assignments.map((assignment) => (
+              {assignments.map(assignment => (
                 <option key={assignment.id}>{assignment.title}</option>
               ))}
             </select>
@@ -603,54 +726,37 @@ const AutoGrade = () => {
               </div>
             </div>
 
-            <div className="max-w-2xl mx-auto mt-10">
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Assignment File (PDF)
-                </label>
-                <div
-                  className={`border-2 border-dashed rounded p-4 text-center cursor-pointer transition-colors duration-300 ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
-                    }`}
-                  onClick={handleBrowseClick}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  <p className="mt-1 text-sm text-gray-500">
-                    {assignments ? (
-                      <span className="text-green-600 font-medium">{assignments}</span>
-                    ) : (
-                      <>
-                        Drag and drop your assignment file here, or{' '}
-                        <span
-                          className="text-blue-600 underline cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent parent click
-                            handleBrowseClick();
-                          }}
-                        >
-                          browse
-                        </span>
-                      </>
-                    )}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Assignment File
+              </label>
+              <div className="border-2 border-dashed border-gray-300 rounded p-4 text-center cursor-pointer hover:border-blue-400 transition"
+                onClick={handleBrowseClick}>
+                <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                <p className="mt-1 text-sm text-gray-500">
+                  Drag and drop your assignment file, or <span
+                    onClick={handleBrowseClick}
+                    className="text-blue-600 hover:underline cursor-pointer"
+                  >
+                    browse
+                  </span>
+                </p>
+
+                {fileName && (
+                  <p className="mt-2 text-sm text-green-600">
+                    Selected file: <strong>{fileName}</strong>
                   </p>
+                )}
 
-                  {fileName && (
-                    <p className="mt-2 text-sm text-green-600">
-                      Selected file: <strong>{fileName}</strong>
-                    </p>
-                  )}
-
-                  <input
-                    type="file"
-                    accept="application/pdf" // Only allow PDF uploads
-                    className="hidden"
-                    id="assignments"
-                    name="assignments"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                  />
-                </div>
+                <input
+                  type="file"
+                  accept="application/pdf" // Only allow PDF uploads
+                  className="hidden"
+                  id="assignmentFile"
+                  name="assignmentFile"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                />
               </div>
             </div>
 
@@ -778,7 +884,9 @@ const AutoGrade = () => {
 
       {/* Modals */}
       {renderFeedbackForm()}
-      {renderNewAssignmentForm()}
+      {renderAssignmentsTab()}
+      {showNewAssignmentForm && renderNewAssignmentForm()}
+
     </div>
   );
 };

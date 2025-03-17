@@ -9,6 +9,11 @@ const { z } = require("zod");
 const cors = require("cors");
 router.use(cors());
 
+
+const multer = require('multer');   
+const storage = multer.memoryStorage(); // stores file in memory
+const upload = multer({ storage: storage });
+
 const bcrypt = require("bcrypt");
 
 const signupSchema = z.object({
@@ -96,12 +101,15 @@ router.get("/auth/check", teacherMiddleware, (req, res) => {
   });
 
 // Upload Assignment
-router.post("/assignments", async (req, res) => {
+router.post("/assignments", upload.single('pdf'), async (req, res) => {
     const { title, description, uploadedBy, dueDate } = req.body;
     console.log("hello1")
     try {
         console.log("inside try");
-        const newAssignment = new Assignment({ title, description, uploadedBy, dueDate });
+        const newAssignment = new Assignment({ title, description, uploadedBy, dueDate, pdf: {
+            data: req.file.buffer,
+            contentType: req.file.mimetype
+          } });
         console.log("Assignment created", newAssignment);
         await newAssignment.save();
         console.log("Assignment saved")
