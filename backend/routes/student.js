@@ -2,16 +2,25 @@ const express = require ("express");
 const { Submission } = require("../db")
 const router = express.Router();
 
-// Submit Assignment
-router.post("/submit", async (req, res) => {
+router.post("/submissions", studentMiddleware, upload.single('pdf'), async (req, res) => {
+    const { assignmentId, studentId } = req.body;
+
     try {
-        const { studentName, studentId, assignmentId, content } = req.body;
-        const submission = new Submission({ studentName, studentId, assignmentId, content });
+        const submission = new StudentSubmission({
+            assignmentId,
+            studentId,
+            pdf: {
+                data: req.file.buffer,
+                contentType: req.file.mimetype
+            }
+        });
+
         await submission.save();
-        res.status(201).json({ message: "Assignment submitted successfully", submission });
+        res.status(201).json({ message: "Submission uploaded successfully!" });
     } catch (error) {
-        res.status(500).json({ error: "Error submitting assignment" });
+        res.status(500).json({ error: "Failed to upload submission" });
     }
 });
+
 
 module.exports = router;

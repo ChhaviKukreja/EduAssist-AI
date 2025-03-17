@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, Upload, FileText, Check, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -21,32 +21,7 @@ const AutoGrade = () => {
   });
 
   // Sample data
-  const [assignments, setAssignments] = useState([
-    {
-      id: 1,
-      title: 'Research Paper Analysis',
-      dueDate: '2025-03-20',
-      status: 'active',
-      totalSubmissions: 5,
-      pendingGrading: 2
-    },
-    {
-      id: 2,
-      title: 'Data Visualization Project',
-      dueDate: '2025-03-15',
-      status: 'closed',
-      totalSubmissions: 6,
-      pendingGrading: 0
-    },
-    {
-      id: 3,
-      title: 'Algorithm Implementation',
-      dueDate: '2025-03-25',
-      status: 'active',
-      totalSubmissions: 4,
-      pendingGrading: 4
-    }
-  ]);
+  const [assignments, setAssignments] = useState([]);
 
   const [students, setStudents] = useState([
     { id: 1, name: 'Alex Johnson', grade: 'A', performance: 92, submitted: true, feedback: false, submissionDate: '2025-03-12' },
@@ -62,6 +37,7 @@ const AutoGrade = () => {
 
   //const [fileName, setFileName] = useState('');
   const fileInputRef = useRef(null);
+
 
   // Trigger hidden input on "browse" click
   const handleBrowseClick = () => {
@@ -80,6 +56,7 @@ const AutoGrade = () => {
   };
 
   const handleInputChange = (e) => {
+    // fileInputRef.current.click();
     const { name, value } = e.target;
     setFormInputs({
       ...formInputs,
@@ -143,6 +120,31 @@ const AutoGrade = () => {
     }
   };
 
+  useEffect(() => {
+    if (activeTab === "assignments") {
+      fetchAssignments();
+    }
+  }, [activeTab]);
+
+  const fetchAssignments = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/teacher/assignments", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch assignments");
+      }
+
+      const data = await response.json();
+      setAssignments(data);
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
+    }
+  };
 
   const handleGradeClick = (student) => {
     setSelectedStudent(student);
@@ -190,11 +192,11 @@ const AutoGrade = () => {
   // Render the main content area based on active tab
   const renderMainContent = () => {
     switch (activeTab) {
-      case 'assignments':
+      case "assignments":
         return renderAssignmentsTab();
-      case 'submissions':
+      case "submissions":
         return renderSubmissionsTab();
-      case 'analytics':
+      case "analytics":
         return renderAnalyticsTab();
       default:
         return renderAssignmentsTab();
@@ -673,7 +675,7 @@ const AutoGrade = () => {
             </button>
           </div>
 
-          <form onSubmit={handleNewAssignmentSubmit}>
+          <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Assignment Title
@@ -681,6 +683,8 @@ const AutoGrade = () => {
               <input
                 type="text"
                 name="title"
+                value={formInputs.title}
+                onChange={handleInputChange}
                 className="w-full border rounded px-3 py-2"
                 placeholder="Enter a title for the assignment"
                 required
@@ -693,6 +697,8 @@ const AutoGrade = () => {
               </label>
               <textarea
                 name="description"
+                value={formInputs.description}
+                onChange={handleInputChange}
                 className="w-full border rounded px-3 py-2 h-24"
                 placeholder="Enter detailed instructions for students..."
                 required
@@ -707,6 +713,8 @@ const AutoGrade = () => {
                 <input
                   type="date"
                   name="dueDate"
+                  value={formInputs.dueDate}
+                onChange={handleInputChange}
                   className="w-full border rounded px-3 py-2"
                   required
                 />
@@ -884,7 +892,7 @@ const AutoGrade = () => {
 
       {/* Modals */}
       {renderFeedbackForm()}
-      {renderAssignmentsTab()}
+      {/* {renderAssignmentsTab()} */}
       {showNewAssignmentForm && renderNewAssignmentForm()}
 
     </div>

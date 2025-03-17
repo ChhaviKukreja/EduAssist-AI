@@ -28,20 +28,24 @@ const assignmentSchema = new mongoose.Schema({
     uploadedBy: String, // Teacher ID
     dueDate: Date,
     pdf: {
-      data: String,
+      data: Buffer,
       contentType: String
     }
 });
 
 const submissionSchema = new mongoose.Schema({
-    studentName: String,
+    // studentName: String,  
     studentId: String,
     assignmentId: mongoose.Schema.Types.ObjectId,
-    content: String, // The submitted text or link to file
-    submittedAt: { type: Date, default: Date.now },
-    graded: { type: Boolean, default: false },
-    grade: String,
-    feedback: String
+    // content: String, // The submitted text or link to file
+    // submittedAt: { type: Date, default: Date.now },
+    // graded: { type: Boolean, default: false },
+    // grade: String,
+    // feedback: String
+    pdf: {
+      data: Buffer,
+      contentType: String
+  }
 });
 
 const Submission = mongoose.model("Submission", submissionSchema);

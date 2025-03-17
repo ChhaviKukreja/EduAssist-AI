@@ -1,61 +1,65 @@
-import pickle
-import numpy as np
-from flask import Flask, request, jsonify
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
+import sys
+import os
+import json
+import re
+import pandas as pd
+import PyPDF2
+from sentence_transformers import SentenceTransformer, util
 
-app = Flask(__name__)
+# Command line arguments
+answer_key_path = sys.argv[1]
+students_folder_path = sys.argv[2]
 
-# Sample Training Data: Assignments and Grades
-X_train = [
-    "The Industrial Revolution began in the 18th century. It led to major changes in agriculture, manufacturing, and transportation.",
-    "Photosynthesis is the process in which plants use sunlight to make food. This process takes place in the chloroplasts of plant cells.",
-    "The Great Depression started in 1929 due to a stock market crash. Millions of people lost jobs, and economies collapsed worldwide.",
-    "Albert Einstein developed the theory of relativity, which transformed our understanding of space and time.",
-    "The causes of World War I include militarism, alliances, imperialism, and nationalism. The assassination of Archduke Franz Ferdinand triggered the war."
-]
+# Initialize model
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# Corresponding Grades (Labels)
-y_train = ["A", "B", "C", "A+", "B+"]  
+def extract_answers_from_pdf(pdf_path):
+    with open(pdf_path, "rb") as file:
+        reader = PyPDF2.PdfReader(file)
+        text = ""
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + " "
+    answers = re.split(r'\d+\.\s*', text)
+    answers = [ans.strip() for ans in answers if ans.strip()]
+    return answers
 
-# Train the Model
-vectorizer = TfidfVectorizer()
-X_train_tfidf = vectorizer.fit_transform(X_train)
+def calculate_score(student_answer, expected_answer):
+    if not student_answer or not expected_answer:
+        return 0
+    student_embedding = model.encode(student_answer, convert_to_tensor=True)
+    expected_embedding = model.encode(expected_answer, convert_to_tensor=True)
+    similarity = util.pytorch_cos_sim(student_embedding, expected_embedding).item()
+    return round(similarity * 100, 2)
 
-model = LogisticRegression()
-model.fit(X_train_tfidf, y_train)
+# Extract expected answers from teacher PDF
+expected_answers = extract_answers_from_pdf(answer_key_path)
 
-# Save the model
-with open("grading_model.pkl", "wb") as f:
-    pickle.dump((vectorizer, model), f)
+# Loop through student PDFs
+scores = {}
 
-@app.route("/grade", methods=["POST"])
-def grade_assignment():
-    data = request.json
-    assignment_text = data.get("assignmentText", "")
+for filename in os.listdir(students_folder_path):
+    if filename.endswith('.pdf') and filename != os.path.basename(answer_key_path):
+        student_id = filename.replace('.pdf', '')
+        student_pdf_path = os.path.join(students_folder_path, filename)
 
-    if not assignment_text:
-        return jsonify({"error": "No assignment text provided"}), 400
+        student_answers = extract_answers_from_pdf(student_pdf_path)
 
-    # Load the saved model
-    with open("grading_model.pkl", "rb") as f:
-        vectorizer, model = pickle.load(f)
+        if len(student_answers) != len(expected_answers):
+            scores[student_id] = {'error': 'Mismatch in number of answers'}
+            continue
 
-    # Transform input and predict grade
-    X_input = vectorizer.transform([assignment_text])
-    predicted_grade = model.predict(X_input)[0]
+        individual_scores = [
+            calculate_score(stu_ans, exp_ans)
+            for stu_ans, exp_ans in zip(student_answers, expected_answers)
+        ]
+        avg_score = round(sum(individual_scores) / len(individual_scores), 2)
 
-    return jsonify({"grade": predicted_grade, "feedback": generate_feedback(predicted_grade)})
+        scores[student_id] = {
+            'average_score': avg_score,
+            'individual_scores': individual_scores
+        }
 
-def generate_feedback(grade):
-    feedback_dict = {
-        "A+": "Excellent work! Your response is clear, well-structured, and highly informative.",
-        "A": "Great job! A well-explained answer with good examples.",
-        "B+": "Good effort! Try adding more details and examples for clarity.",
-        "B": "Decent attempt! Needs more depth and better structure.",
-        "C": "Needs improvement. Work on clarity and include more supporting information."
-    }
-    return feedback_dict.get(grade, "No feedback available.")
-
-if __name__ == "__main__":
-    app.run(port=5001, debug=True)
+# Output scores as JSON to stdout
+print(json.dumps(scores))

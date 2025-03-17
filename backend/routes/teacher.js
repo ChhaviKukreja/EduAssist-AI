@@ -9,6 +9,10 @@ const { z } = require("zod");
 const cors = require("cors");
 router.use(cors());
 
+const { spawn } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+
 
 const multer = require('multer');   
 const storage = multer.memoryStorage(); // stores file in memory
@@ -101,7 +105,7 @@ router.get("/auth/check", teacherMiddleware, (req, res) => {
   });
 
 // Upload Assignment
-router.post("/assignments", upload.single('pdf'), async (req, res) => {
+router.post("/assignments", teacherMiddleware, upload.single('pdf'), async (req, res) => {
     const { title, description, uploadedBy, dueDate } = req.body;
     console.log("hello1")
     try {
@@ -119,7 +123,7 @@ router.post("/assignments", upload.single('pdf'), async (req, res) => {
     }
 });
 
-router.get("/assignments", async (req, res) => {
+router.get("/assignments", teacherMiddleware, async (req, res) => {
     try {
         const assignments = await Assignment.find();
         res.json(assignments);
@@ -127,6 +131,64 @@ router.get("/assignments", async (req, res) => {
         res.status(500).json({ error: "Failed to fetch assignments" });
     }
 });
+
+router.post('/autograde/:assignmentId', teacherMiddleware, async (req, res) => {
+    const assignmentId = req.params.assignmentId;
+
+    try {
+        // Get assignment (teacher's uploaded PDF)
+        const assignment = await Assignment.findById(assignmentId);
+        if (!assignment) {
+            return res.status(404).json({ error: 'Assignment not found' });
+        }
+
+        // Get student submissions
+        const submissions = await StudentSubmission.find({ assignmentId });
+
+        // TEMP: Save assignment and student PDFs locally (for Python script)
+        const folderPath = path.join(__dirname, 'temp');
+        if (!fs.existsSync(folderPath)) fs.mkdirSync(folderPath);
+
+        const assignmentPath = path.join(folderPath, 'answer_key.pdf');
+        fs.writeFileSync(assignmentPath, assignment.pdf.data);
+
+        const studentFiles = [];
+        submissions.forEach(sub => {
+            const studentFilePath = path.join(folderPath, `${sub.studentId}.pdf`);
+            fs.writeFileSync(studentFilePath, sub.pdf.data);
+            studentFiles.push({ studentId: sub.studentId, filePath: studentFilePath });
+        });
+
+        // Call Python script
+        const pythonProcess = spawn('python', ['ml_autograde.py', assignmentPath, folderPath]);
+
+        let output = '';
+        pythonProcess.stdout.on('data', (data) => {
+            output += data.toString();
+        });
+
+        pythonProcess.stderr.on('data', (data) => {
+            console.error(`Python error: ${data}`);
+        });
+
+        pythonProcess.on('close', (code) => {
+            console.log(`Python script finished with code ${code}`);
+            try {
+                const scores = JSON.parse(output);
+                res.status(200).json({ scores });
+            } catch (e) {
+                res.status(500).json({ error: 'Failed to parse grading results' });
+            }
+
+            // Clean up temporary files
+            fs.rmSync(folderPath, { recursive: true, force: true });
+        });
+
+    } catch (error) {
+        res.status(500).json({ error: 'Auto grading failed', details: error.message });
+    }
+});
+
 
 
 // Batch Grade Assignments
