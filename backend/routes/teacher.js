@@ -37,29 +37,30 @@ const signinSchema = z.object({
 
 router.post("/signup", async function (req, res) {
     try {
-        const { firstName, lastName, username, password, role } = signupSchema.parse(req.body);
+        const { firstName, lastName, email, password, role } = signupSchema.parse(req.body);
 
        
         if (role === "teacher") {
-            const existingUser = await Teacher.findOne({ username });
+            const existingUser = await Teacher.findOne({ email });
+            // console.log(existingUser);
             if (existingUser) {
                 return res.status(400).json({ msg: "User already exists" });
             }
             else{
-                await Teacher.create({ firstName, lastName, username, password, role });
+                await Teacher.create({ firstName, lastName, email, password, role });
             }
         } else {
-            const existingUser = await Student.findOne({ username });
+            const existingUser = await Student.findOne({ email });
             if (existingUser) {
                 return res.status(400).json({ msg: "User already exists" });
             }
             else{
-                await Student.create({ firstName, lastName, username, password, role });
+                await Student.create({ firstName, lastName, email, password, role });
             }
             
         }
 
-        const token = jwt.sign({ username, role }, JWT_SECRET);
+        const token = jwt.sign({ email, role }, JWT_SECRET);
         res.json({ msg: "User created successfully", token });
 
     } catch (error) {
@@ -70,18 +71,18 @@ router.post("/signup", async function (req, res) {
   
 router.post("/signin", async function (req, res) {
     try {
-        const { username, password } = signinSchema.parse(req.body);
+        const { email, password } = signinSchema.parse(req.body);
 
         // Check if user exists in Teacher or Student collection
-        const user = await Teacher.findOne({ username, password }) || 
-                     await Student.findOne({ username, password });
+        const user = await Teacher.findOne({ email, password }) || 
+                     await Student.findOne({ email, password });
 
         if (!user) {
-            return res.status(401).json({ msg: "Incorrect username or password" });
+            return res.status(401).json({ msg: "Incorrect email or password" });
         }
 
         // Generate JWT token with user role
-        const token = jwt.sign({ username: user.username, role: user.role }, JWT_SECRET);
+        const token = jwt.sign({ email: user.email, role: user.role }, JWT_SECRET);
 
         res.json({ token, role: user.role });
     } catch (error) {

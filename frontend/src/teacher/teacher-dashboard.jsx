@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Bell, Calendar, Check, ChevronDown, ChevronUp, LineChart, List, MessageSquare, Monitor, Settings, User, Video, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const TeacherDashboard = () => {
+  const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -56,6 +59,10 @@ const TeacherDashboard = () => {
     setSelectedStudent(student);
     setShowFeedbackForm(true);
   };
+
+  const handleAutoGradeClick = () => {
+    navigate('/autograde');
+  };
   
   // Render the main content area based on active tab
   const renderMainContent = () => {
@@ -67,7 +74,7 @@ const TeacherDashboard = () => {
               <div className="bg-white rounded-lg shadow p-6 mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-semibold">Auto Grading & Feedback</h2>
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                  <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" onClick={handleAutoGradeClick}>
                     Auto Grade New Submissions
                   </button>
                 </div>
