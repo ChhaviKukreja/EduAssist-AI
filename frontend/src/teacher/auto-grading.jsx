@@ -13,6 +13,7 @@ const AutoGrade = () => {
   const [isProcessingGrades, setIsProcessingGrades] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileName, setFileName] = useState('');
+  const [teacherUsername, setTeacherUsername] = useState(null);
   const [formInputs, setFormInputs] = useState({
     title: '',
     description: '',
@@ -31,6 +32,34 @@ const AutoGrade = () => {
     { id: 5, name: 'Jordan Wilson', grade: '', performance: 0, submitted: false, feedback: false, submissionDate: null },
     { id: 6, name: 'Casey Miller', grade: 'B', performance: 83, submitted: true, feedback: false, submissionDate: '2025-03-12' },
   ]);
+
+  useEffect(() => {
+    const fetchTeacherUsername = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/teacher/auth/check', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer' + localStorage.getItem('token') // Or however you're storing the token
+          }
+        });
+  
+        if (!res.ok) {
+          throw new Error('Failed to authenticate');
+        }
+  
+        const data = await res.json();
+        console.log(data);
+        console.log("email", data.email);
+        setTeacherUsername(data.email);
+        console.log('Authenticated username:', data.email);
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      }
+    };
+  
+    fetchTeacherUsername();
+  }, []);
 
 
   // Action handlers
@@ -204,6 +233,8 @@ const AutoGrade = () => {
   };
 
   const renderAssignmentsTab = () => {
+    console.log(assignments);
+            console.log(typeof assignments);
     return (
 
       <div className="bg-white rounded-lg shadow p-6 mb-6">

@@ -53,10 +53,12 @@ const SignIn = () => {
     
     if (validateForm()) {
       setIsLoading(true);
-      
+      console.log("outside try");
       try {
+        console.log("inside try");
         // Use role in the endpoint
         const endpoint = `http://localhost:5000/${formData.role}/signin`;
+        console.log("reached endpoint");
         
         const response = await fetch(endpoint, {
           method: "POST",
@@ -68,6 +70,7 @@ const SignIn = () => {
         });
 
         const data = await response.json();
+        console.log("data", data);
 
         if (!response.ok) {
           throw new Error(data.msg || "Invalid email or password. Please try again.");

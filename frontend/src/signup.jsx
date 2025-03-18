@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const SignUp = () => {
+
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -95,7 +98,11 @@ const SignUp = () => {
         localStorage.setItem("userRole", formData.role); // Store user role
         
         // Redirect based on role
-        window.location.href = `/${formData.role}-dashboard`;
+        if (formData.role === 'teacher') {
+          navigate('/teacher/dashboard'); 
+        } else if (formData.role === 'student') {
+          navigate('/student/dashboard'); // You need to create this route/component too!
+        }
   
       } catch (error) {
         console.error("Sign up failed", error);

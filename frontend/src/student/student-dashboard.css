@@ -1,0 +1,943 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* Dashboard container */
+  .dashboard-container {
+    @apply flex min-h-screen bg-gray-100 text-gray-800 transition-all duration-300;
+  }
+  
+  /* Focus mode styles */
+  .dashboard-container.focus-mode {
+    @apply bg-gray-900;
+  }
+  
+  .focus-mode .content {
+    @apply bg-gray-800 text-white;
+  }
+  
+  .focus-mode .sidebar {
+    @apply bg-gray-900 text-gray-300;
+  }
+  
+  /* Sidebar styles */
+  .sidebar {
+    @apply w-64 bg-indigo-900 text-white flex flex-col fixed h-full transition-all duration-300 z-10;
+  }
+  
+  .logo {
+    @apply p-6 flex items-center justify-center border-b border-indigo-800;
+  }
+  
+  .logo h2 {
+    @apply text-2xl font-bold text-white;
+  }
+  
+  .nav-links {
+    @apply flex-1 overflow-y-auto py-4;
+  }
+  
+  .nav-links li {
+    @apply flex items-center px-6 py-3 cursor-pointer transition-colors duration-200 hover:bg-indigo-800;
+  }
+  
+  .nav-links li.active {
+    @apply bg-indigo-700 border-l-4 border-white;
+  }
+  
+  .nav-links li i {
+    @apply mr-4 text-lg;
+  }
+  
+  .focus-toggle {
+    @apply p-4 border-t border-indigo-800;
+  }
+  
+  .focus-toggle button {
+    @apply w-full py-2 px-4 bg-indigo-700 hover:bg-indigo-600 text-white rounded-lg transition-colors duration-200;
+  }
+  
+  /* Main content area */
+  .content {
+    @apply ml-64 flex-1 p-6 transition-all duration-300;
+  }
+  
+  /* Card styles */
+  .card {
+    @apply bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-200;
+  }
+  
+  /* Home section */
+  .overview-cards {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 my-6;
+  }
+  
+  .overview-cards .card {
+    @apply border-l-4 border-indigo-500;
+  }
+  
+  .overview-cards h3 {
+    @apply text-gray-600 text-sm font-medium mb-1;
+  }
+  
+  .overview-cards p {
+    @apply text-2xl font-bold;
+  }
+  
+  .quick-actions {
+    @apply my-8;
+  }
+  
+  .action-buttons {
+    @apply grid grid-cols-2 md:grid-cols-4 gap-3 mt-4;
+  }
+  
+  .action-buttons button {
+    @apply bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-lg transition-colors duration-200 text-sm;
+  }
+  
+  .recent-activity {
+    @apply bg-white rounded-lg shadow-md p-6 mt-6;
+  }
+  
+  .recent-activity ul {
+    @apply mt-4 space-y-2;
+  }
+  
+  .recent-activity li {
+    @apply flex items-center py-2 border-b border-gray-100;
+  }
+  
+  /* Recommendations section */
+  .recommended-content {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 my-6;
+  }
+  
+  .content-card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-200 hover:transform hover:scale-105;
+  }
+  
+  .content-type {
+    @apply bg-indigo-600 text-white text-xs font-bold py-1 px-2 inline-block rounded-br-lg;
+  }
+  
+  .content-card h3 {
+    @apply px-4 pt-4 pb-2 font-semibold;
+  }
+  
+  .content-card p {
+    @apply px-4 text-gray-600 text-sm;
+  }
+  
+  .content-card button {
+    @apply m-4 py-2 px-4 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors duration-200 text-sm;
+  }
+  
+  .learning-insights {
+    @apply mt-8;
+  }
+  
+  .insight-card {
+    @apply bg-white rounded-lg shadow-md p-5 mb-4 border-l-4 border-yellow-500;
+  }
+  
+  /* Notes section */
+  .notes-container {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6 my-6;
+  }
+  
+  .note-card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+  
+  .note-card h3 {
+    @apply text-xl font-semibold mb-2;
+  }
+  
+  .note-actions {
+    @apply flex flex-wrap gap-2 mt-4;
+  }
+  
+  .note-actions button {
+    @apply py-2 px-4 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors duration-200 text-sm;
+  }
+  
+  .upload-notes {
+    @apply mt-8;
+  }
+  
+  .upload-area {
+    @apply bg-white rounded-lg border-2 border-dashed border-gray-300 p-8 text-center cursor-pointer;
+  }
+  
+  .upload-area button {
+    @apply mt-4 py-2 px-6 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors duration-200;
+  }
+  
+  /* Calendar section */
+  .calendar-view {
+    @apply bg-white rounded-lg shadow-md p-6 my-6;
+  }
+  
+  .calendar-header {
+    @apply flex justify-between items-center mb-4;
+  }
+  
+  .calendar-header button {
+    @apply py-1 px-4 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors duration-200;
+  }
+  
+  .placeholder-calendar {
+    @apply border border-gray-200 rounded p-8 text-center text-gray-500;
+  }
+  
+  .upcoming-events {
+    @apply my-8;
+  }
+  
+  .event-card {
+    @apply bg-white rounded-lg shadow-md p-4 mb-4 flex flex-col;
+  }
+  
+  .event-date {
+    @apply text-sm text-indigo-600 font-semibold mb-1;
+  }
+  
+  .event-card h3 {
+    @apply text-lg font-semibold mb-1;
+  }
+  
+  .event-actions {
+    @apply flex gap-2 mt-3;
+  }
+  
+  .event-actions button {
+    @apply py-1 px-3 text-xs bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors duration-200;
+  }
+  
+  .add-event {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+  
+  .event-form {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4 mt-4;
+  }
+  
+  .event-form input {
+    @apply w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500;
+  }
+  
+  .event-form button {
+    @apply py-2 px-4 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors duration-200 md:col-span-2;
+  }
+  
+  /* Chat section */
+  .chat-container {
+    @apply bg-white rounded-lg shadow-md flex flex-col md:flex-row h-[70vh] my-6 overflow-hidden;
+  }
+  
+  .chat-sidebar {
+    @apply w-full md:w-64 bg-gray-50 border-r border-gray-200 flex flex-col;
+  }
+  
+  .chat-search {
+    @apply p-3 border-b border-gray-200;
+  }
+  
+  .chat-search input {
+    @apply w-full p-2 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500;
+  }
+  
+  .chat-list {
+    @apply flex-1 overflow-y-auto;
+  }
+  
+  .chat-item {
+    @apply flex items-center p-3 cursor-pointer hover:bg-gray-100 border-b border-gray-200;
+  }
+  
+  .chat-item.active {
+    @apply bg-indigo-50;
+  }
+  
+  .chat-avatar {
+    @apply w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-semibold mr-3;
+  }
+  
+  .chat-preview h3 {
+    @apply font-medium;
+  }
+  
+  .chat-preview p {
+    @apply text-sm text-gray-600 truncate;
+  }
+  
+  .chat-main {
+    @apply flex-1 flex flex-col;
+  }
+  
+  .chat-header {
+    @apply p-4 border-b border-gray-200 flex items-center justify-between;
+  }
+  
+  .chat-messages {
+    @apply flex-1 p-4 overflow-y-auto space-y-4;
+  }
+  
+  .chat-message {
+      @apply max-w-lg p-3 rounded-lg;
+  }
+  
+  .chat-message.user {
+    @apply bg-indigo-600 text-white ml-auto rounded-br-none;
+  }
+  
+  .chat-message.assistant {
+    @apply bg-gray-200 text-gray-800 mr-auto rounded-bl-none;
+  }
+  
+  .message-time {
+    @apply text-xs mt-1 opacity-75;
+  }
+  
+  .no-messages {
+    @apply text-center text-gray-500 py-8;
+  }
+  
+  .chat-input {
+    @apply p-3 border-t border-gray-200 flex;
+  }
+  
+  .chat-input input {
+    @apply flex-1 p-2 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 mr-2;
+  }
+  
+  .chat-input button {
+    @apply py-2 px-6 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200;
+  }
+  
+  /* Cheatsheets section */
+  .search-filter {
+    @apply flex flex-col sm:flex-row gap-4 my-6;
+  }
+  
+  .search-filter input {
+    @apply flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500;
+  }
+  
+  .search-filter select {
+    @apply p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500;
+  }
+  
+  .cheatsheets-container {
+    @apply grid grid-cols-1 lg:grid-cols-2 gap-6 my-6;
+  }
+  
+  .cheatsheet-card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+  
+  .formula-content {
+    @apply bg-gray-50 p-4 rounded-lg my-3 font-mono text-sm whitespace-pre-wrap;
+  }
+  
+  .cheatsheet-actions {
+    @apply flex gap-2 mt-4;
+  }
+  
+  .cheatsheet-actions button {
+    @apply py-2 px-4 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors duration-200 text-sm;
+  }
+  
+  .create-cheatsheet {
+    @apply bg-white rounded-lg shadow-md p-6 mt-8;
+  }
+  
+  .cheatsheet-form {
+    @apply space-y-4 mt-4;
+  }
+  
+  .cheatsheet-form input, .cheatsheet-form textarea {
+    @apply w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500;
+  }
+  
+  .cheatsheet-form textarea {
+    @apply h-40 font-mono;
+  }
+  
+  .cheatsheet-form button {
+    @apply py-2 px-6 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200;
+  }
+  
+  /* Focus section */
+  .focus-section {
+    @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
+  }
+  
+  .focus-timer {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+  
+  .timer-display {
+    @apply text-6xl font-bold text-center my-8;
+  }
+  
+  .timer-controls {
+    @apply flex justify-center gap-4 mb-4;
+  }
+  
+  .timer-controls button {
+    @apply py-2 px-8 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200;
+  }
+  
+  .timer-settings {
+    @apply flex justify-center gap-2;
+  }
+  
+  .timer-settings button {
+    @apply py-1 px-4 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors duration-200;
+  }
+  
+  .task-list {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+  
+  .tasks {
+    @apply space-y-2 my-4 max-h-64 overflow-y-auto;
+  }
+  
+  .task-item {
+    @apply flex items-center p-2 border-b border-gray-100;
+  }
+  
+  .task-item input[type="checkbox"] {
+    @apply mr-3 w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500;
+  }
+  
+  .task-item span.completed {
+    @apply line-through text-gray-400;
+  }
+  
+  .add-task {
+    @apply flex mt-4;
+  }
+  
+  .add-task input {
+    @apply flex-1 p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-500;
+  }
+  
+  .add-task button {
+    @apply py-2 px-4 bg-indigo-600 text-white rounded-r-lg hover:bg-indigo-700 transition-colors duration-200;
+  }
+  
+  /* Relaxation exercises section */
+  .relaxation-exercises {
+    @apply bg-white rounded-lg shadow-md p-6 mt-6 lg:col-span-2;
+  }
+  
+  .exercises-list {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-4 mt-4;
+  }
+  
+  .exercise-card {
+    @apply bg-indigo-50 p-4 rounded-lg border-l-4 border-indigo-300;
+  }
+  
+  .exercise-card h3 {
+    @apply text-lg font-semibold text-indigo-700 mb-2;
+  }
+  
+  .exercise-card p {
+    @apply text-sm text-gray-600 mb-4;
+  }
+  
+  .exercise-card button {
+    @apply py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 w-full text-sm;
+  }
+  
+  /* Doubt AI section */
+  .doubtai-section {
+    @apply space-y-6;
+  }
+  
+  .question-input {
+    @apply bg-white rounded-lg shadow-md p-6 flex flex-col;
+  }
+  
+  .question-input textarea {
+    @apply w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 h-32 resize-none mb-4;
+  }
+  
+  .question-input button {
+    @apply py-2 px-6 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 self-end;
+  }
+  
+  .loading-indicator {
+    @apply bg-white rounded-lg shadow-md p-6 text-center text-indigo-600;
+  }
+  
+  .ai-response {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+  
+  .response-content {
+    @apply bg-indigo-50 p-4 rounded-lg my-4 text-gray-800;
+  }
+  
+  .response-actions {
+    @apply flex gap-3;
+  }
+  
+  .response-actions button {
+    @apply py-2 px-4 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors duration-200 text-sm;
+  }
+  
+  .common-questions {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+  
+  .question-chips {
+    @apply flex flex-wrap gap-2 mt-4;
+  }
+  
+  .chip {
+    @apply py-2 px-4 bg-gray-100 text-gray-800 rounded-full hover:bg-gray-200 transition-colors duration-200 text-sm cursor-pointer;
+  }
+
+  /* Assignments section */
+  .assignments-section {
+    @apply space-y-6;
+  }
+  
+  .assignment-tabs {
+    @apply flex border-b border-gray-200 mb-6;
+  }
+  
+  .tab-button {
+    @apply py-3 px-6 text-gray-600 font-medium border-b-2 border-transparent hover:text-indigo-600 focus:outline-none transition-colors duration-200;
+  }
+  
+  .tab-button.active {
+    @apply text-indigo-600 border-indigo-600;
+  }
+  
+  .assignments-list {
+    @apply space-y-4;
+  }
+  
+  .assignments-list h2 {
+    @apply text-xl font-semibold mb-4;
+  }
+  
+  .assignment-card {
+    @apply bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-500 mb-4;
+  }
+  
+  .assignment-card.submitted {
+    @apply border-l-4 border-green-500;
+  }
+  
+  .assignment-header {
+    @apply flex justify-between items-center mb-2;
+  }
+  
+  .assignment-header h3 {
+    @apply text-lg font-semibold;
+  }
+  
+  .subject-tag {
+    @apply bg-indigo-100 text-indigo-800 text-xs font-semibold py-1 px-2 rounded;
+  }
+  
+  .assignment-description {
+    @apply text-gray-600 mb-4;
+  }
+  
+  .assignment-details {
+    @apply bg-gray-50 p-3 rounded-lg mb-4;
+  }
+  
+  .due-date {
+    @apply mb-2;
+  }
+  
+  .days-remaining {
+    @apply text-sm ml-2;
+  }
+  
+  .days-remaining.urgent {
+    @apply text-red-600 font-semibold;
+  }
+  
+  .assignment-files {
+    @apply mt-2;
+  }
+  
+  .file-link {
+    @apply flex items-center text-indigo-600 hover:text-indigo-800 text-sm mt-1;
+  }
+  
+  .file-link i {
+    @apply mr-2;
+  }
+  
+  .assignment-submission {
+    @apply mt-4 pt-4 border-t border-gray-200;
+  }
+  
+  .assignment-submission h4 {
+    @apply font-medium mb-2;
+  }
+  
+  .file-upload {
+    @apply mb-3;
+  }
+  
+  .file-upload input {
+    @apply hidden;
+  }
+  
+  .file-upload label {
+    @apply block w-full py-2 px-4 bg-gray-100 text-gray-700 rounded cursor-pointer border border-gray-300 hover:bg-gray-200 transition-colors duration-200;
+  }
+  
+  .submit-button {
+    @apply w-full py-2 px-4 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors duration-200;
+  }
+  
+  .submit-button:disabled {
+    @apply bg-gray-400 cursor-not-allowed;
+  }
+  
+  .assignment-submitted {
+    @apply mt-4 pt-4 border-t border-gray-200;
+  }
+  
+  .submission-status {
+    @apply text-green-600 font-medium flex items-center;
+  }
+  
+  .submission-status i {
+    @apply mr-2;
+  }
+  
+  .submission-history {
+    @apply mt-8;
+  }
+  
+  .submission-history h2 {
+    @apply text-xl font-semibold mb-4;
+  }
+  
+  .submissions-table {
+    @apply w-full border-collapse;
+  }
+  
+  .submissions-table th {
+    @apply bg-gray-50 text-left py-3 px-4 font-medium text-gray-600 border-b border-gray-200;
+  }
+  
+  .submissions-table td {
+    @apply py-3 px-4 border-b border-gray-200;
+  }
+  
+  .file-name {
+    @apply text-indigo-600;
+  }
+  
+  .file-size {
+    @apply text-xs text-gray-500 ml-2;
+  }
+  
+  .status-badge {
+    @apply bg-green-100 text-green-800 text-xs font-semibold py-1 px-2 rounded;
+  }
+  
+  .action-button {
+    @apply py-1 px-3 text-xs bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors duration-200 mr-1;
+  }
+  
+  .no-submissions {
+    @apply text-center text-gray-500 py-8;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .sidebar {
+      @apply fixed left-0 transform -translate-x-full;
+    }
+    
+    .sidebar.open {
+      @apply transform translate-x-0;
+    }
+    
+    .content {
+      @apply ml-0;
+    }
+    
+    .mobile-menu-toggle {
+      @apply block fixed top-4 left-4 z-20 bg-indigo-600 text-white p-2 rounded-lg;
+    }
+    
+    .assignment-header {
+      @apply flex-col items-start;
+    }
+    
+    .subject-tag {
+      @apply mt-1;
+    }
+    
+    .submissions-table {
+      @apply block overflow-x-auto;
+    }
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .sidebar {
+      @apply fixed left-0 transform -translate-x-full;
+    }
+    
+    .sidebar.open {
+      @apply transform translate-x-0;
+    }
+    
+    .content {
+      @apply ml-0;
+    }
+    
+    .mobile-menu-toggle {
+      @apply block fixed top-4 left-4 z-20 bg-indigo-600 text-white p-2 rounded-lg;
+    }
+  }
+  
+  /* Dark mode adjustments */
+  .dark .card, 
+  .dark .chat-container, 
+  .dark .note-card, 
+  .dark .event-card, 
+  .dark .cheatsheet-card, 
+  .dark .focus-timer, 
+  .dark .task-list {
+    @apply bg-gray-800 text-white border-gray-700;
+  }
+  
+  .dark .chat-sidebar {
+    @apply bg-gray-900 border-gray-700;
+  }
+  
+  .dark input, 
+  .dark textarea, 
+  .dark select {
+    @apply bg-gray-700 border-gray-600 text-white;
+  }
+  
+  .dark .formula-content, 
+  .dark .response-content {
+    @apply bg-gray-700;
+  }
+  
+  /* Additional components */
+  .progress-bar {
+    @apply w-full h-4 bg-gray-200 rounded-full overflow-hidden;
+  }
+  
+  .progress-fill {
+    @apply h-full bg-indigo-600 transition-all duration-300;
+  }
+  
+  .badge {
+    @apply inline-block py-1 px-2 rounded-full text-xs font-semibold;
+  }
+  
+  .badge-primary {
+    @apply bg-indigo-100 text-indigo-800;
+  }
+  
+  .badge-success {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  .badge-warning {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+  
+  .badge-danger {
+    @apply bg-red-100 text-red-800;
+  }
+  
+  /* Toggle switch */
+  .toggle-switch {
+    @apply relative inline-block w-12 h-6;
+  }
+  
+  .toggle-switch input {
+    @apply opacity-0 w-0 h-0;
+  }
+  
+  .toggle-slider {
+    @apply absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 transition-all duration-300 rounded-full;
+  }
+  
+  .toggle-slider:before {
+    @apply absolute h-4 w-4 left-1 bottom-1 bg-white transition-all duration-300 rounded-full content-[''];
+  }
+  
+  input:checked + .toggle-slider {
+    @apply bg-indigo-600;
+  }
+  
+  input:checked + .toggle-slider:before {
+    @apply transform translate-x-6;
+  }
+  
+  /* Tooltip */
+  .tooltip {
+    @apply relative inline-block;
+  }
+  
+  .tooltip .tooltip-text {
+    @apply invisible absolute z-10 p-2 bg-gray-800 text-white text-xs rounded opacity-0 transition-opacity duration-300 w-32 text-center -translate-x-1/2 left-1/2 bottom-full mb-1;
+  }
+  
+  .tooltip:hover .tooltip-text {
+    @apply visible opacity-100;
+  }
+  
+  /* Notification dot */
+  .notification-dot {
+    @apply absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full;
+  }
+  
+  /* Loading spinner */
+  .spinner {
+    @apply w-5 h-5 border-2 border-t-2 border-indigo-600 border-t-transparent rounded-full animate-spin inline-block;
+  }
+  
+  /* Additional elements for the dashboard */
+  .streak-calendar {
+    @apply grid grid-cols-7 gap-1 mt-4;
+  }
+  
+  .streak-day {
+    @apply w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium;
+  }
+  
+  .streak-day.completed {
+    @apply bg-indigo-600 text-white;
+  }
+  
+  .streak-day.today {
+    @apply border-2 border-indigo-600;
+  }
+  
+  .streak-day.empty {
+    @apply bg-gray-100;
+  }
+  
+  /* File upload progress */
+  .upload-progress {
+    @apply w-full h-2 bg-gray-200 rounded-full mt-4;
+  }
+  
+  .upload-progress-fill {
+    @apply h-full bg-indigo-600 rounded-full transition-all duration-300;
+  }
+  
+  /* Modal styling */
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center;
+  }
+  
+  .modal-content {
+    @apply bg-white rounded-lg shadow-lg p-6 max-w-md w-full;
+  }
+  
+  .modal-header {
+    @apply flex justify-between items-center mb-4;
+  }
+  
+  .modal-close {
+    @apply text-gray-500 hover:text-gray-700 cursor-pointer;
+  }
+  
+  .modal-footer {
+    @apply flex justify-end gap-2 mt-6;
+  }
+  
+  /* User profile section */
+  .profile-header {
+    @apply flex items-center gap-4 bg-white rounded-lg shadow-md p-6 mb-6;
+  }
+  
+  .profile-avatar {
+    @apply w-16 h-16 rounded-full bg-indigo-600 text-white flex items-center justify-center text-2xl font-bold;
+  }
+  
+  .profile-info h2 {
+    @apply text-xl font-semibold;
+  }
+  
+  .profile-info p {
+    @apply text-gray-600;
+  }
+  
+  .profile-stats {
+    @apply grid grid-cols-3 gap-4 mt-4;
+  }
+  
+  .stat-card {
+    @apply bg-white rounded-lg shadow-md p-4 text-center;
+  }
+  
+  .stat-card h3 {
+    @apply text-gray-600 text-sm;
+  }
+  
+  .stat-card p {
+    @apply text-2xl font-semibold;
+  }
+  
+  /* Calendar day styling */
+  .calendar-grid {
+    @apply grid grid-cols-7 gap-1;
+  }
+  
+  .calendar-day {
+    @apply p-2 min-h-[4rem] border border-gray-200 relative;
+  }
+  
+  .calendar-day.today {
+    @apply bg-indigo-50 border-indigo-300;
+  }
+  
+  .calendar-day.has-event {
+    @apply cursor-pointer;
+  }
+  
+  .day-number {
+    @apply text-sm font-medium;
+  }
+  
+  .day-event-indicator {
+    @apply w-2 h-2 rounded-full bg-indigo-500 absolute top-2 right-2;
+  }
+  
+  /* Week view */
+  .week-view {
+    @apply grid grid-cols-7 gap-1;
+  }
+  
+  .week-day-header {
+    @apply p-2 bg-indigo-50 text-center font-medium border-b border-indigo-100;
+  }
+  
+  .hour-slot {
+    @apply p-1 border-b border-gray-100 min-h-[3rem] relative;
+  }
+  
+  .hour-event {
+    @apply absolute left-1 right-1 bg-indigo-100 border-l-4 border-indigo-500 text-xs p-1 overflow-hidden;
+  }
+}

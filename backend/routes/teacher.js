@@ -105,7 +105,7 @@ router.get("/auth/check", teacherMiddleware, (req, res) => {
   });
 
 // Upload Assignment
-router.post("/assignments", teacherMiddleware, upload.single('pdf'), async (req, res) => {
+router.post("/assignments", upload.single('pdf'), async (req, res) => {
     const { title, description, uploadedBy, dueDate } = req.body;
     console.log("hello1")
     try {
@@ -123,9 +123,12 @@ router.post("/assignments", teacherMiddleware, upload.single('pdf'), async (req,
     }
 });
 
-router.get("/assignments", teacherMiddleware, async (req, res) => {
+router.get("/assignments", async (req, res) => {
+    console.log("outside try");
     try {
+        console.log("called");
         const assignments = await Assignment.find();
+        console.log("assignments", assignments);
         res.json(assignments);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch assignments" });
