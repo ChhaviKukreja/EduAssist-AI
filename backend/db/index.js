@@ -18,8 +18,12 @@ const teacherSchema = new mongoose.Schema({
     lastName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ["teacher", "student"], required: true }
+    role: { type: String, enum: ["teacher", "student"], required: true },
     //agreedToTerms: { type: Boolean, required: true },
+    todoAssignments: [{
+        type:mongoose.Schema.Types.ObjectID,
+        ref:"Assignment"
+    }]
   });
 
 const assignmentSchema = new mongoose.Schema({

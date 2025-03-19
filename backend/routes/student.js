@@ -101,14 +101,35 @@ router.get("/auth/check", studentMiddleware, (req, res) => {
     res.status(200).json({ username: req.username }); // Send back the authenticated user's details
   });
 
-router.get("/assignments", async (req, res) => {
+router.get("/student-id", studentMiddleware, async (req, res) => {
     try {
-        const assignments = await Assignment.find();
-        res.json(assignments);
+        const student = await Student.findOne({ email: req.email });
+        if (!student) return res.status(404).json({ error: "Student not found" });
+
+        res.json({ studentId: student._id });
     } catch (error) {
-        res.status(500).json({ error: "Failed to fetch assignments" });
+        res.status(500).json({ error: "Error fetching student ID" });
     }
 });
+
+router.get("/assignments", studentMiddleware, async (req, res) => {
+    try {
+        const assignments = await Assignment.find({ students: req.studentId }); // Assuming each assignment has a `students` array
+        res.json({ assignments });
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching assignments" });
+    }
+});
+
+
+// router.get("/assignments", async (req, res) => {
+//     try {
+//         const assignments = await Assignment.find();
+//         res.json(assignments);
+//     } catch (error) {
+//         res.status(500).json({ error: "Failed to fetch assignments" });
+//     }
+// });
 
 router.post("/submissions", upload.single('pdf'), async (req, res) => {
     const { assignmentId, studentId } = req.body;
