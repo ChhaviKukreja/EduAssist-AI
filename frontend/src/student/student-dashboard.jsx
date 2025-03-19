@@ -1,13 +1,90 @@
-import React, { useState, useEffect } from 'react';
-//import './student/student-dashboard.css';
+import React, { useState } from 'react';
+import { NavLink } from 'react-router-dom';
+
+import Assignments from './assignmentTest';
+import Calendar from './calendar';
+import Chat from './chatMessage';
+import Cheatsheets from './cheatSheets';
+import DoubtAI from './doubtSolving';
+import Focus from './focusTools';
+import Notes from './notes';
+import Recommendations from './recommendation';
+
+// Dummy Home component if you haven't imported one
+const Home = () => (
+  <section className="home-section">
+    <h1>Welcome back, Student!</h1>
+    <div className="overview-cards">
+      <div className="card">
+        <h3>Today's Tasks</h3>
+        <p>3 assignments due</p>
+      </div>
+      <div className="card">
+        <h3>Study Streak</h3>
+        <p>5 days 🔥</p>
+      </div>
+      <div className="card">
+        <h3>Focus Time</h3>
+        <p>2h 30m this week</p>
+      </div>
+      <div className="card">
+        <h3>Next Event</h3>
+        <p>Math Exam - Tomorrow</p>
+      </div>
+    </div>
+
+    <div className="quick-actions">
+      <h2>Quick Actions</h2>
+      <div className="action-buttons">
+        <button onClick={() => console.log('Start Focus Session')}>Start Focus Session</button>
+        <button onClick={() => console.log('Review Notes')}>Review Notes</button>
+        <button onClick={() => console.log('View Assignments')}>View Assignments</button>
+        <button onClick={() => console.log('Check Schedule')}>Check Schedule</button>
+      </div>
+    </div>
+
+    <div className="recent-activity">
+      <h2>Recent Activity</h2>
+      <ul>
+        <li>Completed assignment: "Data Structures Lab 3"</li>
+        <li>Focused for 45 minutes on "Calculus Chapter 5"</li>
+        <li>Added 3 new notes to "Physics Electromagnetism"</li>
+      </ul>
+    </div>
+  </section>
+);
 
 // Main Dashboard Component
 const StudentDashboard = () => {
   const [activeSection, setActiveSection] = useState('home');
   const [focusMode, setFocusMode] = useState(false);
-  
+
   const toggleFocusMode = () => {
     setFocusMode(!focusMode);
+  };
+
+  const renderSection = () => {
+    switch (activeSection) {
+      case 'assignments':
+        return <Assignments />;
+      case 'recommendations':
+        return <Recommendations />;
+      case 'notes':
+        return <Notes />;
+      case 'calendar':
+        return <Calendar />;
+      case 'chat':
+        return <Chat />;
+      case 'cheatsheets':
+        return <Cheatsheets />;
+      case 'focus':
+        return <Focus />;
+      case 'doubtai':
+        return <DoubtAI />;
+      case 'home':
+      default:
+        return <Home />;
+    }
   };
 
   return (
@@ -53,52 +130,7 @@ const StudentDashboard = () => {
       </nav>
 
       <main className="content">
-        {/* Home Section */}
-        {activeSection === 'home' && (
-          <section className="home-section">
-            <h1>Welcome back, Student!</h1>
-            <div className="overview-cards">
-              <div className="card">
-                <h3>Today's Tasks</h3>
-                <p>3 assignments due</p>
-              </div>
-              <div className="card">
-                <h3>Study Streak</h3>
-                <p>5 days 🔥</p>
-              </div>
-              <div className="card">
-                <h3>Focus Time</h3>
-                <p>2h 30m this week</p>
-              </div>
-              <div className="card">
-                <h3>Next Event</h3>
-                <p>Math Exam - Tomorrow</p>
-              </div>
-            </div>
-
-            <div className="quick-actions">
-              <h2>Quick Actions</h2>
-              <div className="action-buttons">
-                <button onClick={() => setActiveSection('focus')}>Start Focus Session</button>
-                <button onClick={() => setActiveSection('notes')}>Review Notes</button>
-                <button onClick={() => setActiveSection('assignments')}>View Assignments</button>
-                <button onClick={() => setActiveSection('calendar')}>Check Schedule</button>
-              </div>
-            </div>
-
-            <div className="recent-activity">
-              <h2>Recent Activity</h2>
-              <ul>
-                <li>Completed assignment: "Data Structures Lab 3"</li>
-                <li>Focused for 45 minutes on "Calculus Chapter 5"</li>
-                <li>Added 3 new notes to "Physics Electromagnetism"</li>
-              </ul>
-            </div>
-          </section>
-        )}
-
-        
-       
+        {renderSection()}
       </main>
     </div>
   );

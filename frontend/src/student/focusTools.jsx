@@ -1,3 +1,8 @@
+import React, { useState, useEffect } from 'react';
+
+const focusTab = () => {
+
+  const [activeSection, setActiveSection] = useState('focus');
 const [tasks, setTasks] = useState([]);
 const [newTask, setNewTask] = useState('');
 const [studyTimer, setStudyTimer] = useState(25 * 60); // 25 minutes in seconds
@@ -101,3 +106,6 @@ return (
 
     </div>
 )
+}
+
+export default focusTab;

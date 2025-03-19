@@ -1,4 +1,9 @@
-// Sample formulas and cheat sheets
+
+import React, { useState, useEffect } from 'react';
+
+const cheatsheetsTab = () => {
+
+  const [activeSection, setActiveSection] = useState('cheatsheets');// Sample formulas and cheat sheets
 const cheatSheets = [
     { title: "Calculus Formulas", content: "Integration by parts: ∫u dv = uv - ∫v du\nChain rule: d/dx[f(g(x))] = f'(g(x))·g'(x)" },
     { title: "Physics Constants", content: "Gravitational constant (G): 6.674×10^−11 m^3⋅kg^−1⋅s^−2\nSpeed of light (c): 299,792,458 m/s" },
@@ -48,3 +53,6 @@ return (
         )}
     </div>
 )
+}
+
+export default cheatsheetsTab;

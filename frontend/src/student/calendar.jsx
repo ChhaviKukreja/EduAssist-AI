@@ -1,3 +1,8 @@
+import React, { useState, useEffect } from 'react';
+
+const calendarTab = () => {
+
+  const [activeSection, setActiveSection] = useState('calendar');
 // Sample calendar events
 const calendarEvents = [
     { title: "Math Exam", date: "2025-03-20", time: "10:00 AM", location: "Room 305" },
@@ -57,3 +62,6 @@ return (
 
     </div>
 )
+}
+
+export default calendarTab;

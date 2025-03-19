@@ -1,3 +1,8 @@
+import React, { useState, useEffect } from 'react';
+
+const notesTab = () => {
+
+  const [activeSection, setActiveSection] = useState('notes');
 const [notes, setNotes] = useState([]);
 
 // Sample auto-summarized notes
@@ -39,3 +44,6 @@ return (
 
   </div>
 )
+}
+
+export default notesTab;

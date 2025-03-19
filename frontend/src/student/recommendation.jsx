@@ -1,3 +1,8 @@
+import React, { useState, useEffect } from 'react';
+
+const recommendationsTab = () => {
+
+  const [activeSection, setActiveSection] = useState('recommendations');
 // Sample recommended content
 const recommendedContent = [
     { title: "Advanced Calculus Concepts", type: "Video", duration: "15 min" },
@@ -40,3 +45,6 @@ return(
         )}
     </div>
 )
+}
+
+export default recommendationsTab;

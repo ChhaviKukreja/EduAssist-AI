@@ -1,3 +1,8 @@
+import React, { useState, useEffect } from 'react';
+
+const doubtsTab = () => {
+
+  const [activeSection, setActiveSection] = useState('doubtai');
 const [aiResponse, setAiResponse] = useState('');
 const [currentQuestion, setCurrentQuestion] = useState('');
 const [isLoading, setIsLoading] = useState(false);
@@ -69,3 +74,5 @@ return (
         )}
     </div>
 )
+}
+export default doubtsTab;

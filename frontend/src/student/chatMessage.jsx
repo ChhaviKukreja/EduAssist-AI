@@ -1,3 +1,8 @@
+import React, { useState, useEffect } from 'react';
+
+const chatsTab = () => {
+
+  const [activeSection, setActiveSection] = useState('chat');
 const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
 // Handle chat message sending
@@ -93,3 +98,6 @@ return (
 
     </div>
 )
+}
+
+export default chatsTab;
