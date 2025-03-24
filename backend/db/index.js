@@ -37,7 +37,11 @@ const assignmentSchema = new mongoose.Schema({
     pdf: {
       data: Buffer,
       contentType: String
-    }
+    },
+    specificSubmission: [{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Submission"
+    }]
 });
 
 const submissionSchema = new mongoose.Schema({

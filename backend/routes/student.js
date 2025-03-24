@@ -131,7 +131,7 @@ router.get('/assignments',studentMiddleware, async (req, res) => {
     try {
         console.log("inside try");
         const student = await Student.findOne({ email: req.email }).populate('todoAssignments');
-        console.log("stutodo", student.todoAssignments);
+        //console.log("stutodo", student.todoAssignments);
         res.json(student.todoAssignments);
     } catch (error) {
         console.error("Error fetching assigned assignments:", error);
@@ -180,6 +180,22 @@ router.post("/submit-assignment/:username/:assignmentId", upload.single("pdf"), 
         // Push submission to student's submittedAssignments
         student.submittedAssignments.push(newSubmission._id);
         await student.save();
+
+        // const updateResult = await Assignment.updateOne(
+        //     { _id: newSubmission._id },
+        //     { "$push": { specificSubmission: newSubmission._id } }
+        //   );
+
+        assignment.specificSubmission.push(newSubmission._id);
+        await assignment.save();
+
+      
+          // Log the result of the update
+        //   console.log("Update result:", updateResult);
+      
+        //   if (updateResult.nModified === 0) {
+        //     throw new Error("Failed to update organiser with the new event.");
+        //   }
 
         res.status(200).json({ message: "Assignment submitted successfully", submissionId: newSubmission._id });
     } catch (error) {
