@@ -40,7 +40,7 @@ const AutoGrade = () => {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: 'Bearer' + localStorage.getItem('token') // Or however you're storing the token
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Or however you're storing the token
           }
         });
   

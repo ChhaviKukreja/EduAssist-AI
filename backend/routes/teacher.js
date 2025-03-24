@@ -1,6 +1,5 @@
 const express = require ("express");
-const { Assignment, Teacher } = require("../db")
-const { Submission } = require("../db");
+const { Student, Teacher, Assignment, Submission } = require("../db")
 const teacherMiddleware = require("../middleware/teacher");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
@@ -117,7 +116,18 @@ router.post("/assignments", upload.single('pdf'), async (req, res) => {
         console.log("Assignment created", newAssignment);
         await newAssignment.save();
         console.log("Assignment saved")
+
+        const assignmentId = newAssignment._id;
+
+        const updateResult = await Student.updateMany({}, { $push: { todoAssignments: assignmentId } });
+
+        //console.log("Update result:", updateResult);
+
+        if (updateResult.nModified === 0) {
+            throw new Error("Failed to update assignment with the new submission.");
+        }
         res.status(201).json(newAssignment);
+
     } catch (error) {
         res.status(500).json({ error: "Failed to create assignment" });
     }
@@ -128,7 +138,7 @@ router.get("/assignments", async (req, res) => {
     try {
         console.log("called");
         const assignments = await Assignment.find();
-        console.log("assignments", assignments);
+        // console.log("assignments", assignments);
         res.json(assignments);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch assignments" });

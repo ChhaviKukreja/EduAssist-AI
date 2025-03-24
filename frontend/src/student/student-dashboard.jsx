@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import Assignments from './assignmentTest';
@@ -9,6 +9,7 @@ import DoubtAI from './doubtSolving';
 import Focus from './focusTools';
 import Notes from './notes';
 import Recommendations from './recommendation';
+
 
 // Dummy Home component if you haven't imported one
 const Home = () => (
@@ -58,6 +59,36 @@ const Home = () => (
 const StudentDashboard = () => {
   const [activeSection, setActiveSection] = useState('home');
   const [focusMode, setFocusMode] = useState(false);
+  const [studentUsername, setStudentUsername] = useState();
+
+  useEffect(() => {
+    const fetchStudentUsername = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/student/auth/check', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to authenticate');
+        }
+
+        const data = await res.json();
+        console.log("data", data.username);
+        setStudentUsername(data.username);
+        console.log('Authenticated username:', data.username);
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      }
+    };
+
+    fetchStudentUsername();
+  }, []);
+  
+  let studentId = studentUsername;
 
   const toggleFocusMode = () => {
     setFocusMode(!focusMode);
@@ -97,9 +128,16 @@ const StudentDashboard = () => {
           <li className={activeSection === 'home' ? 'active' : ''} onClick={() => setActiveSection('home')}>
             <i className="fas fa-home"></i> Home
           </li>
-          <li className={activeSection === 'assignments' ? 'active' : ''} onClick={() => setActiveSection('assignments')}>
+          {/* <li className={activeSection === 'assignments' ? 'active' : ''} onClick={() => setActiveSection('assignments')}>
+            <i className="fas fa-tasks"></i> Assignments
+          </li> */}
+          <li
+            className={activeSection === 'assignments' && <Assignments username={studentId} /> ? 'active' : ''}
+            onClick={() => setActiveSection('assignments', studentUsername)}
+          >
             <i className="fas fa-tasks"></i> Assignments
           </li>
+
           <li className={activeSection === 'recommendations' ? 'active' : ''} onClick={() => setActiveSection('recommendations')}>
             <i className="fas fa-lightbulb"></i> Recommendations
           </li>

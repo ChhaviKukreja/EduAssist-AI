@@ -19,10 +19,13 @@ const teacherSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ["teacher", "student"], required: true },
-    //agreedToTerms: { type: Boolean, required: true },
     todoAssignments: [{
         type:mongoose.Schema.Types.ObjectID,
-        ref:"Assignment"
+        ref:"Assignment"  
+    }],
+    submittedAssignments: [{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Submission"
     }]
   });
 
@@ -39,10 +42,11 @@ const assignmentSchema = new mongoose.Schema({
 
 const submissionSchema = new mongoose.Schema({
     // studentName: String,  
-    studentId: String,
+    studentEmail: String,
     assignmentId: mongoose.Schema.Types.ObjectId,
     // content: String, // The submitted text or link to file
-    // submittedAt: { type: Date, default: Date.now },
+    submittedAt: { type: Date, default: Date.now },
+    status: String,
     // graded: { type: Boolean, default: false },
     // grade: String,
     // feedback: String

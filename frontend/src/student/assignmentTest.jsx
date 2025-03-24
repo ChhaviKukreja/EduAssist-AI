@@ -1,303 +1,337 @@
 import React, { useState, useEffect } from 'react';
 
 const AssignmentsTab = () => {
-  const [activeSection, setActiveSection] = useState('assignments');
-  const [fileToUpload, setFileToUpload] = useState(null);
-  const [uploadingFile, setUploadingFile] = useState(false);
-  const [assignmentSubmissions, setAssignmentSubmissions] = useState([]);
-  const [studentUsername, setStudentUsername] = useState(null);
-  const [teacherAssignments, setTeacherAssignments] = useState([]);
-  const [studentId, setStudentId] = useState(null);
-  const [assignments, setAssignments] = useState([]);
+    const [activeTab, setActiveTab] = useState('assigned');
+    const [fileToUpload, setFileToUpload] = useState(null);
+    const [uploadingFile, setUploadingFile] = useState(false);
+    const [studentUsername, setStudentUsername] = useState('');
+    const [assignedAssignments, setAssignedAssignments] = useState([]);
+    const [submittedAssignments, setSubmittedAssignments] = useState([]);
 
-  // Get days remaining until due date
-  const getDaysRemaining = (dateString) => {
-    const dueDate = new Date(dateString);
-    const today = new Date();
-    const diffTime = dueDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
+    useEffect(() => {
+        const fetchStudentUsername = async () => {
+            try {
+                const res = await fetch('http://localhost:5000/student/auth/check', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                });
 
-  // Format due date
-  const formatDueDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-  };
+                if (!res.ok) throw new Error('Failed to authenticate');
 
-  // Handle file selection
-  const handleFileChange = (e) => {
-    setFileToUpload(e.target.files[0]);
-  };
+                const data = await res.json();
+                setStudentUsername(data.username);
+            } catch (error) {
+                console.error('Auth check failed:', error);
+            }
+        };
 
-  // Upload submission handler
-  const uploadSubmission = async (assignmentId) => {
-    const token = localStorage.getItem("token");
+        fetchStudentUsername();
+    }, []);
 
-    if (!token) {
-      alert("You must be logged in to submit an assignment.");
-      return;
-    }
+     // Get days remaining until due date
+     const getDaysRemaining = (dateString) => {
+        const dueDate = new Date(dateString);
+        const today = new Date();
+        const diffTime = dueDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays;
+    };
 
-    if (!studentId) {
-      alert("Student ID not found.");
-      return;
-    }
+    // Format due date
+    const formatDueDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    };
 
-    if (!assignmentId) {
-      alert("Assignment ID not found.");
-      return;
-    }
+    // Format submission date
+    const formatSubmissionDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    };
 
-    const formData = new FormData();
-    formData.append("pdf", fileToUpload);
+    // Fetch assigned assignments (from todoAssignments)
+    const fetchAssignments = async () => {
+        try {
+            const response = await fetch("http://localhost:5000/student/assignments", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                }
+            });
 
-    try {
-      setUploadingFile(true);
-      const res = await fetch(`http://localhost:5000/submissions/${`assignmentId`}`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-        body: formData
-      });
+            if (!response.ok) throw new Error("Failed to fetch assignments");
 
-      const data = await res.json();
-      if (res.ok) {
-        alert("Submission uploaded successfully!");
-        setFileToUpload(null);
-        fetchTeacherAssignments(); // Refresh assignments status
-        fetchSubmissions(); // Refresh submissions table
-      } else {
-        alert("Error: " + data.error);
-      }
-    } catch (error) {
-      console.error("Failed to upload submission", error);
-    } finally {
-      setUploadingFile(false);
-    }
-  };
+            const data = await response.json();
+            setAssignedAssignments(data);
+        } catch (error) {
+            console.error("Error fetching assignments:", error);
+        }
+    };
 
-  // Fetch authenticated student username
-  useEffect(() => {
-    const fetchStudentUsername = async () => {
-      try {
-        const res = await fetch('http://localhost:5000/student/auth/check', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + localStorage.getItem('token')
-          }
-        });
+    // Fetch submitted assignments (from submittedAssignments)
+    const fetchSubmissions = async () => {
+        try {
+            const response = await fetch("http://localhost:5000/student/submissions", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                },
+            });
 
-        if (!res.ok) {
-          throw new Error('Failed to authenticate');
+            if (!response.ok) throw new Error("Failed to fetch submissions");
+
+            const data = await response.json();
+            setSubmittedAssignments(data);
+        } catch (error) {
+            console.error("Error fetching submitted assignments:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchAssignments();
+    }, [studentUsername]);
+
+    useEffect(() => {
+        if (activeTab === "submitted") fetchSubmissions();
+    }, [activeTab, studentUsername]);
+
+    // Handle file selection
+    const handleFileChange = (e, assignmentId) => {
+        if (e.target.files.length > 0) {
+            setFileToUpload({ file: e.target.files[0], assignmentId });
+        }
+    };
+
+    // Upload submission and move assignment from "Assigned" to "Submitted"
+    const uploadSubmission = async (assignmentId) => {
+        if (!fileToUpload || fileToUpload.assignmentId !== assignmentId) {
+            alert("Please select a file for this assignment.");
+            return;
         }
 
-        const data = await res.json();
-        setStudentUsername(data.email);
-        console.log('Authenticated username:', data.email);
-      } catch (error) {
-        console.error('Auth check failed:', error);
-      }
+        const formData = new FormData();
+        formData.append("pdf", fileToUpload.file);
+
+        try {
+            setUploadingFile(true);
+            const res = await fetch(`http://localhost:5000/student/submit-assignment/${encodeURIComponent(studentUsername)}/${encodeURIComponent(assignmentId)}`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
+                body: formData
+            });
+
+            if (!res.ok) throw new Error("Failed to upload submission");
+
+            const data = await res.json();
+            alert("Submission uploaded successfully!");
+
+            // Move assignment from assigned to submitted
+            const assignment = assignedAssignments.find(a => a._id === assignmentId);
+            const submittedAssignment = {
+                ...assignment,
+                submittedAt: new Date().toISOString(),
+                fileName: fileToUpload.file.name,
+                fileSize: (fileToUpload.file.size / 1024).toFixed(2) + " KB"
+            };
+
+            setAssignedAssignments(assignedAssignments.filter(a => a._id !== assignmentId));
+            setSubmittedAssignments([...submittedAssignments, submittedAssignment]);
+            setFileToUpload(null);
+        } catch (error) {
+            console.error("Failed to upload submission", error);
+            alert("An error occurred. Please try again.");
+        } finally {
+            setUploadingFile(false);
+        }
     };
 
-    fetchStudentUsername();
-  }, []);
+    return (
+        <div className="assignments-container">
+            <section className="assignments-section">
+                <h1>Assignments</h1>
 
-  // Fetch teacher assignments
-  const fetchTeacherAssignments = async () => {
-    try {
-      const res = await fetch('http://localhost:5000/teacher/assignments', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to fetch assignments');
-      }
-
-      const data = await res.json();
-      setTeacherAssignments(data);
-    } catch (error) {
-      console.error('Error fetching teacher assignments:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchTeacherAssignments();
-  }, []);
-
-  // Fetch student ID
-  useEffect(() => {
-    const fetchId = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      try {
-        const res = await fetch("http://localhost:5000/student/student-id", {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await res.json();
-        setStudentId(data.studentId);
-      } catch (error) {
-        console.error("Error fetching student ID:", error);
-      }
-    };
-
-    fetchId();
-  }, []);
-
-  // Fetch assignments (optional for student assignments)
-  useEffect(() => {
-    const fetchStudentAssignments = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      try {
-        const res = await fetch("http://localhost:5000/student/assignments", {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await res.json();
-        setAssignments(data.assignments);
-      } catch (error) {
-        console.error("Error fetching student assignments:", error);
-      }
-    };
-
-    fetchStudentAssignments();
-  }, []);
-
-  // Fetch student submissions
-  const fetchSubmissions = async () => {
-    if (!studentUsername) return;
-
-    try {
-      const res = await fetch(`http://localhost:5000/student/submissions?studentId=${studentUsername}`);
-      const data = await res.json();
-      setAssignmentSubmissions(data.submissions);
-    } catch (error) {
-      console.error('Failed to fetch submissions', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchSubmissions();
-  }, [studentUsername]);
-
-  return (
-    <div>
-      {activeSection === 'assignments' && (
-        <section className="assignments-section">
-          <h1>Assignments</h1>
-
-          <div className="assignment-tabs">
-            <button className="tab-button active">Assigned</button>
-            <button className="tab-button">Submitted</button>
-            <button className="tab-button">Graded</button>
-          </div>
-
-          <div className="assignments-list">
-            <h2>Assigned Tasks</h2>
-            {teacherAssignments.map((assignment) => (
-              <div className={`assignment-card ${assignment.submitted ? 'submitted' : ''}`} key={assignment.id}>
-                <div className="assignment-header">
-                  <h3>{assignment.title}</h3>
-                  <span className="subject-tag">{assignment.subject}</span>
-                </div>
-
-                <p className="assignment-description">{assignment.description}</p>
-
-                <div className="assignment-details">
-                  <p className="due-date">
-                    <strong>Due:</strong> {formatDueDate(assignment.dueDate)}
-                    <span className={`days-remaining ${getDaysRemaining(assignment.dueDate) < 3 ? 'urgent' : ''}`}>
-                      ({getDaysRemaining(assignment.dueDate)} days remaining)
-                    </span>
-                  </p>
-
-                  <div className="assignment-files">
-                    <p><strong>Assignment File:</strong></p>
-                    <a href={assignment.fileUrl} className="file-link" target="_blank" rel="noopener noreferrer">
-                      <i className="fas fa-file-pdf"></i> {assignment.fileName}
-                    </a>
-                  </div>
-                </div>
-
-                {!assignment.submitted ? (
-                  <div className="assignment-submission">
-                    <h4>Submit Your Work</h4>
-                    <div className="file-upload">
-                      <input
-                        type="file"
-                        id={`file-upload-${assignment.id}`}
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleFileChange}
-                      />
-                      <label htmlFor={`file-upload-${assignment.id}`}>
-                        {fileToUpload ? fileToUpload.name : "Choose PDF file"}
-                      </label>
-                    </div>
+                <div className="assignment-tabs">
                     <button
-                      className="submit-button"
-                      onClick={() => uploadSubmission(assignment.id)}
-                      disabled={!fileToUpload || uploadingFile}
+                        className={`tab-button ${activeTab === 'assigned' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('assigned')}
                     >
-                      {uploadingFile ? "Uploading..." : "Submit Assignment"}
+                        Assigned
                     </button>
-                  </div>
-                ) : (
-                  <div className="assignment-submitted">
-                    <p className="submission-status">
-                      <i className="fas fa-check-circle"></i> Submitted
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                    <button
+                        className={`tab-button ${activeTab === 'submitted' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('submitted')}
+                    >
+                        Submitted
+                    </button>
+                    <button
+                        className={`tab-button ${activeTab === 'graded' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('graded')}
+                    >
+                        Graded
+                    </button>
+                </div>
 
-          <div className="submission-history">
-            <h2>Your Submissions</h2>
-            {assignmentSubmissions.length > 0 ? (
-              <table className="submissions-table">
-                <thead>
-                  <tr>
-                    <th>Assignment</th>
-                    <th>Submitted Date</th>
-                    <th>File</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {assignmentSubmissions.map((submission) => (
-                    <tr key={submission.id}>
-                      <td>{submission.assignmentTitle}</td>
-                      <td>{submission.submittedDate}</td>
-                      <td>
-                        <span className="file-name">{submission.fileName}</span>
-                        <span className="file-size"> ({submission.fileSize})</span>
-                      </td>
-                      <td>
-                        <span className="status-badge">{submission.status}</span>
-                      </td>
-                      <td>
-                        <button className="action-button">View</button>
-                        <button className="action-button">Replace</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p className="no-submissions">No submissions yet. Submit your first assignment!</p>
-            )}
-          </div>
-        </section>
-      )}
-    </div>
-  );
+                {/* Assigned Assignments Tab */}
+                {activeTab === 'assigned' && (
+                    <div className="assignments-list">
+                        <h2>Assigned Tasks</h2>
+                        {assignedAssignments.length > 0 ? (
+                            assignedAssignments.map((assignment) => (
+                                <div className="assignment-card" key={assignment._id}>
+                                    <div className="assignment-header">
+                                        <h3>{assignment.title}</h3>
+                                    </div>
+
+                                    <p className="assignment-description">{assignment.description}</p>
+
+                                    <div className="assignment-details">
+                                        <p className="due-date">
+                                            <strong>Due:</strong> {formatDueDate(assignment.dueDate)}
+                                            <span className={`days-remaining ${getDaysRemaining(assignment.dueDate) < 3 ? 'urgent' : ''}`}>
+                                                ({getDaysRemaining(assignment.dueDate)} days remaining)
+                                            </span>
+                                        </p>
+                                    </div>
+
+                                    <div className="assignment-submission">
+                                        <h4>Submit Your Work</h4>
+                                        <div className="file-upload">
+                                            <input
+                                                type="file"
+                                                id={`file-upload-${assignment._id}`}
+                                                accept=".pdf,.doc,.docx"
+                                                onChange={(e) => handleFileChange(e, assignment._id)}
+                                            />
+                                            <label htmlFor={`file-upload-${assignment._id}`}>
+                                                {fileToUpload && fileToUpload.assignmentId === assignment._id ?
+                                                    fileToUpload.file.name : "Choose PDF file"}
+                                            </label>
+                                        </div>
+                                        <button
+                                            className="submit-button"
+                                            onClick={() => uploadSubmission(assignment._id)}
+                                            disabled={!fileToUpload || fileToUpload.assignmentId !== assignment._id || uploadingFile}
+                                        >
+                                            {uploadingFile && fileToUpload && fileToUpload.assignmentId === assignment._id ?
+                                                "Uploading..." : "Submit Assignment"}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="no-assignments">No assignments pending submission.</p>
+                        )}
+                    </div>
+                )}
+
+                {/* Submitted Assignments Tab */}
+                {activeTab === 'submitted' && (
+                    <div className="assignments-list submitted-list">
+                        <h2>Submitted Assignments</h2>
+                        {submittedAssignments.length > 0 ? (
+                            submittedAssignments.map((submission) => (
+                                <div className="assignment-card submitted" key={submission.assignmentId}>
+                                    <div className="assignment-header">
+                                        <h3>{submission.title}</h3>
+                                        <span className="status-badge">Submitted</span>
+                                    </div>
+
+                                    <p className="assignment-description">
+                                        {submission.description || "Assignment submitted successfully."}
+                                    </p>
+
+                                    <div className="assignment-details">
+                                        <p className="submission-date">
+                                            <strong>Submitted:</strong> {formatSubmissionDate(submission.submittedAt)}
+                                        </p>
+                                        <p className="file-info">
+                                            <span className="file-name">{submission.fileName}</span>
+                                            <span className="file-size"> ({submission.fileSize})</span>
+                                        </p>
+                                    </div>
+
+                                    <div className="assignment-actions">
+                                        <button
+                                            className="download-button"
+                                            onClick={() => downloadSubmission(submission.fileUrl, submission.fileName)}
+                                        >
+                                            Download Submission
+                                        </button>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="no-assignments">No submitted assignments yet.</p>
+                        )}
+                    </div>
+                )}
+
+                {/* Graded Assignments Tab */}
+                {activeTab === 'graded' && (
+                    <div className="assignments-list graded-list">
+                        <h2>Graded Assignments</h2>
+                        {gradedAssignments.length > 0 ? (
+                            gradedAssignments.map((submission) => (
+                                <div className="assignment-card graded" key={submission._id || submission.assignmentId}>
+                                    <div className="assignment-header">
+                                        <h3>{submission.title || submission.assignmentTitle}</h3>
+                                        <span className="status-badge graded">Graded</span>
+                                    </div>
+
+                                    <p className="assignment-description">
+                                        {submission.description || "Assignment has been graded."}
+                                    </p>
+
+                                    <div className="assignment-details">
+                                        <p className="submission-date">
+                                            <strong>Submitted:</strong> {formatSubmissionDate(submission.submittedAt)}
+                                        </p>
+                                        <p className="grade-info">
+                                            <strong>Grade:</strong> {submission.grade || "A"}
+                                        </p>
+                                        <p className="file-info">
+                                            <span className="file-name">{submission.fileName}</span>
+                                            <span className="file-size"> ({submission.fileSize})</span>
+                                        </p>
+                                    </div>
+
+                                    <div className="assignment-actions">
+                                        <button
+                                            className="download-button"
+                                            onClick={() => downloadSubmission(
+                                                submission._id || submission.assignmentId,
+                                                submission.fileName
+                                            )}
+                                        >
+                                            Download Submission
+                                        </button>
+                                        {submission.feedbackFile && (
+                                            <button
+                                                className="feedback-button"
+                                                onClick={() => downloadSubmission(
+                                                    submission._id || submission.assignmentId,
+                                                    "Feedback-" + submission.fileName
+                                                )}
+                                            >
+                                                Download Feedback
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="no-assignments">No graded assignments yet.</p>
+                        )}
+                    </div>
+                )}
+            </section>
+        </div>
+    );
 };
 
 export default AssignmentsTab;
