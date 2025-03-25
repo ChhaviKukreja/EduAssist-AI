@@ -1,13 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Upload, FileText, Check, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from "react-toastify";
 
-const AutoGrade = () => {
+const AutoGrade = ({ }) => {
   // State management
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('assignments');
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [submissions, setSubmissions] = useState([]);
+  const [selectedSubmissions, setSelectedSubmissions] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showNewAssignmentForm, setShowNewAssignmentForm] = useState(false);
   const [isProcessingGrades, setIsProcessingGrades] = useState(false);
@@ -24,14 +27,8 @@ const AutoGrade = () => {
   // Sample data
   const [assignments, setAssignments] = useState([]);
 
-  const [students, setStudents] = useState([
-    { id: 1, name: 'Alex Johnson', grade: 'A', performance: 92, submitted: true, feedback: false, submissionDate: '2025-03-12' },
-    { id: 2, name: 'Jamie Smith', grade: 'B+', performance: 87, submitted: true, feedback: true, submissionDate: '2025-03-11' },
-    { id: 3, name: 'Taylor Brown', grade: 'C', performance: 74, submitted: true, feedback: false, submissionDate: '2025-03-13' },
-    { id: 4, name: 'Morgan Davis', grade: 'A-', performance: 90, submitted: true, feedback: true, submissionDate: '2025-03-10' },
-    { id: 5, name: 'Jordan Wilson', grade: '', performance: 0, submitted: false, feedback: false, submissionDate: null },
-    { id: 6, name: 'Casey Miller', grade: 'B', performance: 83, submitted: true, feedback: false, submissionDate: '2025-03-12' },
-  ]);
+
+  const [students, setStudents] = useState([]);
 
   useEffect(() => {
     const fetchTeacherUsername = async () => {
@@ -43,11 +40,11 @@ const AutoGrade = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`, // Or however you're storing the token
           }
         });
-  
+
         if (!res.ok) {
           throw new Error('Failed to authenticate');
         }
-  
+
         const data = await res.json();
         console.log(data);
         console.log("email", data.email);
@@ -57,7 +54,7 @@ const AutoGrade = () => {
         console.error('Auth check failed:', error);
       }
     };
-  
+
     fetchTeacherUsername();
   }, []);
 
@@ -180,25 +177,6 @@ const AutoGrade = () => {
     setShowFeedbackForm(true);
   };
 
-  const handleAutoGradeClick = () => {
-    setIsProcessingGrades(true);
-    // Simulating API call to ML model for auto-grading
-    setTimeout(() => {
-      setIsProcessingGrades(false);
-      // Update students with auto-graded results
-      setStudents(students.map(student =>
-        student.submitted && !student.grade ?
-          { ...student, grade: generateRandomGrade(), performance: Math.floor(Math.random() * 30) + 70 } :
-          student
-      ));
-    }, 2000);
-  };
-
-  const generateRandomGrade = () => {
-    const grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'];
-    return grades[Math.floor(Math.random() * 6)]; // Biased toward better grades
-  };
-
   const handleNewAssignmentSubmit = (e) => {
     e.preventDefault();
 
@@ -232,9 +210,75 @@ const AutoGrade = () => {
     }
   };
 
+  const handleSelect = (submissionId) => {
+    setSelectedSubmissions(prev =>
+      prev.includes(submissionId) ? prev.filter(id => id !== submissionId) : [...prev, submissionId]
+    );
+  };
+
+
+  const handleBatchGrade = async () => {
+    if (selectedSubmissions.length === 0) {
+      toast.error("No submissions selected!");
+      return;
+    }
+    console.log("yooooooooooooooo");
+    try {
+      const res = await fetch("http://localhost:5000/teacher/grade/batch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ submissionIds: selectedSubmissions })
+      });
+
+      if (!res.ok) {
+        throw new Error(`Batch grading failed: ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      console.log("Response from server:", data);
+      toast.success("Batch grading completed!");
+
+      const updatedSubmissions = submissions.map(sub => {
+        const gradedSub = res.data.results.find(r => r.submissionId === sub._id);
+        return gradedSub ? { ...sub, score: gradedSub.score, feedback: gradedSub.feedback } : sub;
+      });
+
+      setSubmissions(updatedSubmissions);
+      setShowFeedbackForm(true);
+      setSelectedSubmissions([]);
+      setSelectedStudent(selectedSubmissions); // Get the first selected submission
+
+      console.log("Before alert...");
+      alert("Auto-grading completed successfully!");
+      console.log("After alert...");
+      //navigate("/auto-grading");
+      window.location.reload()
+
+      // Switch to "submissions" tab
+      setActiveTab("submissions");
+
+      // Navigate to the auto-grading page
+    } catch (err) {
+      toast.error("Batch grading failed!");
+    }
+  };
+
+
+  useEffect(() => {
+    fetch("http://localhost:5000/teacher/submissions") // Adjust the API URL as needed
+      .then(response => response.json())
+      .then(data => {
+        console.log("Assignments with submissions:", data);
+        setAssignments(data);
+      })
+      .catch(error => console.error("Error fetching assignments:", error));
+  }, []);
+
   const renderAssignmentsTab = () => {
     console.log(assignments);
-            console.log(typeof assignments);
+    console.log(typeof assignments);
     return (
 
       <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -301,95 +345,6 @@ const AutoGrade = () => {
 
   };
 
-  // const renderNewAssignmentForm = () => {
-  //   return (
-  //     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  //       <div className="bg-white p-6 rounded-lg w-96 relative">
-  //         <button
-  //           className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-  //           onClick={() => setShowNewAssignmentForm(false)}
-  //         >
-  //           &times;
-  //         </button>
-  //         <h2 className="text-lg font-semibold mb-4">Create New Assignment</h2>
-  //         <form onSubmit={handleSubmit}>
-  //           <div className="mb-4">
-  //             <label className="block mb-1 font-medium">Title</label>
-  //             <input
-  //               type="text"
-  //               name="title"
-  //               value={formInputs.title}
-  //               onChange={handleInputChange}
-  //               className="w-full px-3 py-2 border rounded"
-  //               required
-  //             />
-  //           </div>
-  //           <div className="mb-4">
-  //             <label className="block mb-1 font-medium">Description</label>
-  //             <textarea
-  //               name="description"
-  //               value={formInputs.description}
-  //               onChange={handleInputChange}
-  //               className="w-full px-3 py-2 border rounded"
-  //               rows={3}
-  //             />
-  //           </div>
-  //           <div className="mb-4">
-  //             <label className="block mb-1 font-medium">Uploaded By</label>
-  //             <input
-  //               type="text"
-  //               name="uploadedBy"
-  //               value={formInputs.uploadedBy}
-  //               onChange={handleInputChange}
-  //               className="w-full px-3 py-2 border rounded"
-  //               required
-  //             />
-  //           </div>
-  //           <div className="mb-4">
-  //             <label className="block mb-1 font-medium">Due Date</label>
-  //             <input
-  //               type="date"
-  //               name="dueDate"
-  //               value={formInputs.dueDate}
-  //               onChange={handleInputChange}
-  //               className="w-full px-3 py-2 border rounded"
-  //               required
-  //             />
-  //           </div>
-  //           <div className="mb-4">
-  //             <label className="block mb-1 font-medium">Upload PDF</label>
-  //             <input
-  //               type="file"
-  //               accept=".pdf"
-  //               onChange={handleFileChange}
-  //               className="w-full"
-  //               required
-  //             />
-  //             {fileName && <p className="text-sm text-gray-500 mt-1">{fileName}</p>}
-  //           </div>
-  //           <div className="flex justify-end">
-  //             <button
-  //               type="submit"
-  //               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-  //             >
-  //               Submit
-  //             </button>
-  //           </div>
-  //         </form>
-  //       </div>
-  //     </div>
-  //   );
-  // };
-
-  //   return (
-  //     <div className="p-6 bg-gray-100 min-h-screen">
-  //       {renderAssignmentsTab()}
-  //       {showNewAssignmentForm && renderNewAssignmentForm()}
-  //     </div>
-  //   );
-  // };
-
-
   const renderSubmissionsTab = () => {
     return (
       <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -398,87 +353,79 @@ const AutoGrade = () => {
           <div className="flex space-x-3">
             <select className="border rounded px-3 py-2">
               <option>All Assignments</option>
-              {assignments.map(assignment => (
-                <option key={assignment.id}>{assignment.title}</option>
-              ))}
             </select>
             <button
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center"
-              onClick={handleAutoGradeClick}
-              disabled={isProcessingGrades}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              onClick={handleBatchGrade}
+              disabled={!selectedSubmissions || selectedSubmissions.length === 0}
             >
-              {isProcessingGrades ? (
-                <>
-                  <span className="mr-2">Processing</span>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                </>
-              ) : (
-                'Auto Grade Submissions'
-              )}
+              Auto Grade Submissions
             </button>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="px-4 py-2 text-left">Student</th>
-                <th className="px-4 py-2 text-left">Submission Date</th>
-                <th className="px-4 py-2 text-left">Grade</th>
-                <th className="px-4 py-2 text-left">Performance</th>
-                <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {students.map(student => (
-                <tr key={student.id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3">{student.name}</td>
-                  <td className="px-4 py-3">{student.submissionDate || 'N/A'}</td>
-                  <td className="px-4 py-3">{student.submitted ? student.grade || 'Pending' : 'Not Submitted'}</td>
+        <table className="min-w-full border-collapse border border-gray-200">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="px-4 py-2 border">Select</th>
+              <th className="px-4 py-2 border">Student Email</th>
+              <th className="px-4 py-2 border">Submission Date</th>
+              <th className="px-4 py-2 border">Score</th>
+              <th className="px-4 py-2 border">Feedback</th>
+              <th className="px-4 py-2 border">Status</th>
+              <th className="px-4 py-2 border">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {assignments.map((assignment) =>
+              assignment.specificSubmission.map((submission) => (
+                <tr key={submission._id} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3">
-                    {student.submitted ? (
-                      <div className="flex items-center">
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div
-                            className="bg-blue-600 h-2.5 rounded-full"
-                            style={{ width: `${student.performance}%` }}
-                          ></div>
-                        </div>
-                        <span className="ml-2">{student.performance}%</span>
-                      </div>
-                    ) : 'N/A'}
+                    <input
+                      type="checkbox"
+                      checked={selectedSubmissions.includes(submission._id)}
+                      onChange={() => handleSelect(submission._id)}
+                    />
                   </td>
+                  <td className="px-4 py-3">{submission.studentEmail}</td>
+                  <td className="px-4 py-3">{new Date(submission.submittedAt).toLocaleString() || "N/A"}</td>
+                  <td className="px-4 py-3">{submission.score !== undefined ? submission.score : "Not graded yet"}</td>
+                  {/* <td className="px-4 py-3">{submission.feedback || "N/A"}</td> */}
                   <td className="px-4 py-3">
-                    {student.submitted ? (
-                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
-                        Submitted
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-sm">
-                        Missing
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {student.submitted && (
+                    {submission.submittedAt && (
                       <button
-                        className={`px-3 py-1 rounded text-sm ${student.feedback ? 'bg-gray-100 text-gray-800' : 'bg-blue-100 text-blue-800'}`}
-                        onClick={() => handleGradeClick(student)}
+                        className={`px-3 py-1 rounded text-sm ${submission.feedback ? 'bg-gray-100 text-gray-800' : 'bg-blue-100 text-blue-800'}`}
+                        onClick={() => {
+                          handleGradeClick(students);
+
+                        }}
                       >
-                        {student.feedback ? 'Edit Feedback' : 'Add Feedback'}
+                        {submission.feedback ? 'Show Feedback' : 'Add Feedback'}
                       </button>
                     )}
                   </td>
+                  <td className="px-4 py-3">
+                    <span className={submission.submittedAt ? "text-green-600" : "text-red-600"}>
+                      {submission.submittedAt ? "Submitted" : "Missing"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                      onClick={() => handleSelect(submission._id)}
+                    >
+                      {selectedSubmissions.includes(submission._id) ? "Deselect" : "Select"}
+                    </button>
+                  </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )};
+          </tbody>
+        </table>
       </div>
     );
   };
+
 
   const renderAnalyticsTab = () => {
     return (
@@ -548,14 +495,24 @@ const AutoGrade = () => {
 
   // Render the feedback form modal
   const renderFeedbackForm = () => {
-    if (!showFeedbackForm || !selectedStudent) return null;
+    console.log("submission", selectedSubmissions);
+    console.log("assignments", assignments);
+
+    if (!showFeedbackForm || !selectedSubmissions.length === 0) return null;
+
+    const allSubmissions = assignments.flatMap(assignment => assignment.specificSubmission);
+
+    // Find the matching submission object
+    const currentSubmission = allSubmissions.find(sub => sub._id === selectedSubmissions[0]);
+    console.log("curr", currentSubmission);
+    if (!currentSubmission) return null; // Prevent errors if not found
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">
-              Feedback for {selectedStudent.name}
+              Feedback for {currentSubmission.studentEmail}
             </h2>
             <button
               className="text-gray-500 hover:text-gray-700"
@@ -567,35 +524,28 @@ const AutoGrade = () => {
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Current Grade
+              Current Score
             </label>
             <div className="flex items-center">
-              <select className="border rounded px-3 py-2 w-24">
-                <option>{selectedStudent.grade || 'Select'}</option>
-                <option>A</option>
-                <option>A-</option>
-                <option>B+</option>
-                <option>B</option>
-                <option>B-</option>
-                <option>C+</option>
-                <option>C</option>
-                <option>C-</option>
-                <option>D</option>
-                <option>F</option>
-              </select>
-              <div className="ml-4">
+              <input
+                type="text"
+                className="border rounded px-3 py-2 w-full"
+                value={currentSubmission.score}
+                readOnly
+              />
+              {/* <div className="ml-4">
                 <div className="w-full bg-gray-200 rounded-full h-2.5 w-64">
                   <div
                     className="bg-blue-600 h-2.5 rounded-full"
-                    style={{ width: `${selectedStudent.performance}%` }}
+                    style={{ width: `${currentSubmission.performance}%` }}
                   ></div>
                 </div>
-                <span className="text-sm text-gray-500">{selectedStudent.performance}% Performance</span>
-              </div>
+                <span className="text-sm text-gray-500">{currentSubmission.performance}% Performance</span>
+              </div> */}
             </div>
           </div>
 
-          <div className="mb-4">
+          {/* <div className="mb-4">
             <div className="flex justify-between items-center mb-1">
               <label className="block text-sm font-medium text-gray-700">
                 Assignment Submission
@@ -606,16 +556,35 @@ const AutoGrade = () => {
               <FileText size={18} className="text-gray-500 mr-2" />
               <span className="text-sm">assignment_submission_{selectedStudent.id}.pdf</span>
             </div>
+          </div> */}
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Strengths
+            </label>
+            <textarea
+              className="w-full border rounded px-3 py-2 h-20"
+              placeholder="Mention the student's strengths..."
+              defaultValue={
+                currentSubmission.feedback && currentSubmission.feedback.length > 0
+                  ? currentSubmission.feedback[0].strengths
+                  : ""
+              }
+            ></textarea>
           </div>
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Personalized Feedback
+              Areas for Improvement
             </label>
             <textarea
-              className="w-full border rounded px-3 py-2 h-32"
-              placeholder="Enter detailed feedback for the student..."
-              defaultValue={selectedStudent.feedback ? "Great work on this assignment! Your analysis was thoughtful and showed good understanding of the concepts. Consider expanding on your conclusions in the next assignment." : ""}
+              className="w-full border rounded px-3 py-2 h-20"
+              placeholder="Mention areas the student can improve..."
+              defaultValue={
+                currentSubmission.feedback && currentSubmission.feedback.length > 0
+                  ? currentSubmission.feedback[0].improvements
+                  : ""
+              }
             ></textarea>
           </div>
 
@@ -745,7 +714,7 @@ const AutoGrade = () => {
                   type="date"
                   name="dueDate"
                   value={formInputs.dueDate}
-                onChange={handleInputChange}
+                  onChange={handleInputChange}
                   className="w-full border rounded px-3 py-2"
                   required
                 />
@@ -863,12 +832,12 @@ const AutoGrade = () => {
               <span className="px-3 py-1 bg-green-100 text-green-800 rounded text-sm mr-4">
                 ML Model Connected
               </span>
-              <div className="ml-3 relative">
+              {/* <div className="ml-3 relative">
                 <div className="flex items-center">
                   <div className="w-8 h-8 rounded-full bg-gray-300"></div>
                   <span className="ml-2">Prof. Johnson</span>
                 </div>
-              </div>
+              </div> */}
               <button
                 onClick={() => navigate('/teacher/dashboard')} // ✅ handle navigation
                 className="ml-4 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition duration-300"
@@ -922,7 +891,8 @@ const AutoGrade = () => {
       </main>
 
       {/* Modals */}
-      {renderFeedbackForm()}
+      {showFeedbackForm && renderFeedbackForm()}
+
       {/* {renderAssignmentsTab()} */}
       {showNewAssignmentForm && renderNewAssignmentForm()}
 

@@ -1,4 +1,5 @@
-const express = require ("express");
+require('dotenv').config
+const express = require("express");
 const { Student, Teacher, Assignment, Submission } = require("../db")
 const teacherMiddleware = require("../middleware/teacher");
 const router = express.Router();
@@ -12,33 +13,36 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_API_KEY}`;
 
-const multer = require('multer');   
+
+const multer = require('multer');
 const storage = multer.memoryStorage(); // stores file in memory
 const upload = multer({ storage: storage });
 
 const bcrypt = require("bcrypt");
 
 const signupSchema = z.object({
-  firstName: z.string().min(2, "First name must have at least 2 characters"),
-  lastName: z.string().min(2, "Last name must have at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  password: z.string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Must include an uppercase letter")
-    .regex(/[a-z]/, "Must include a lowercase letter")
-    .regex(/[0-9]/, "Must include a number"),
-  confirmPassword: z.string().min(8),
-  role: z.enum(["teacher", "student"]),
-//   agreedToTerms: z.boolean().refine(val => val === true, { message: "You must agree to the Terms of Service" }),
+    firstName: z.string().min(2, "First name must have at least 2 characters"),
+    lastName: z.string().min(2, "Last name must have at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    password: z.string()
+        .min(8, "Password must be at least 8 characters")
+        .regex(/[A-Z]/, "Must include an uppercase letter")
+        .regex(/[a-z]/, "Must include a lowercase letter")
+        .regex(/[0-9]/, "Must include a number"),
+    confirmPassword: z.string().min(8),
+    role: z.enum(["teacher", "student"]),
+    //   agreedToTerms: z.boolean().refine(val => val === true, { message: "You must agree to the Terms of Service" }),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
 });
 
 const signinSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 
@@ -47,14 +51,14 @@ router.post("/signup", async function (req, res) {
     try {
         const { firstName, lastName, email, password, role } = signupSchema.parse(req.body);
 
-       
+
         if (role === "teacher") {
             const existingUser = await Teacher.findOne({ email });
             // console.log(existingUser);
             if (existingUser) {
                 return res.status(400).json({ msg: "User already exists" });
             }
-            else{
+            else {
                 await Teacher.create({ firstName, lastName, email, password, role });
             }
         } else {
@@ -62,10 +66,10 @@ router.post("/signup", async function (req, res) {
             if (existingUser) {
                 return res.status(400).json({ msg: "User already exists" });
             }
-            else{
+            else {
                 await Student.create({ firstName, lastName, email, password, role });
             }
-            
+
         }
 
         const token = jwt.sign({ email, role }, JWT_SECRET);
@@ -76,14 +80,14 @@ router.post("/signup", async function (req, res) {
     }
 });
 
-  
+
 router.post("/signin", async function (req, res) {
     try {
         const { email, password } = signinSchema.parse(req.body);
 
         // Check if user exists in Teacher or Student collection
-        const user = await Teacher.findOne({ email, password }) || 
-                     await Student.findOne({ email, password });
+        const user = await Teacher.findOne({ email, password }) ||
+            await Student.findOne({ email, password });
 
         if (!user) {
             return res.status(401).json({ msg: "Incorrect email or password" });
@@ -97,11 +101,11 @@ router.post("/signin", async function (req, res) {
         res.status(400).json({ error: error.errors || error.message });
     }
 });
-  
-  
+
+
 router.get("/auth/check", teacherMiddleware, (req, res) => {
     res.status(200).json({ username: req.username }); // Send back the authenticated user's details
-  });
+});
 
 // Upload Assignment
 router.post("/assignments", upload.single('pdf'), async (req, res) => {
@@ -109,10 +113,12 @@ router.post("/assignments", upload.single('pdf'), async (req, res) => {
     console.log("hello1")
     try {
         console.log("inside try");
-        const newAssignment = new Assignment({ title, description, uploadedBy, dueDate, pdf: {
-            data: req.file.buffer,
-            contentType: req.file.mimetype
-          } });
+        const newAssignment = new Assignment({
+            title, description, uploadedBy, dueDate, pdf: {
+                data: req.file.buffer,
+                contentType: req.file.mimetype
+            }
+        });
         console.log("Assignment created", newAssignment);
         await newAssignment.save();
         console.log("Assignment saved")
@@ -145,102 +151,122 @@ router.get("/assignments", async (req, res) => {
     }
 });
 
-router.post('/autograde/:assignmentId', teacherMiddleware, async (req, res) => {
-    const assignmentId = req.params.assignmentId;
-
+router.get("/submissions", async (req, res) => {
     try {
-        // Get assignment (teacher's uploaded PDF)
-        const assignment = await Assignment.findById(assignmentId);
-        if (!assignment) {
-            return res.status(404).json({ error: 'Assignment not found' });
-        }
-
-        // Get student submissions
-        const submissions = await StudentSubmission.find({ assignmentId });
-
-        // TEMP: Save assignment and student PDFs locally (for Python script)
-        const folderPath = path.join(__dirname, 'temp');
-        if (!fs.existsSync(folderPath)) fs.mkdirSync(folderPath);
-
-        const assignmentPath = path.join(folderPath, 'answer_key.pdf');
-        fs.writeFileSync(assignmentPath, assignment.pdf.data);
-
-        const studentFiles = [];
-        submissions.forEach(sub => {
-            const studentFilePath = path.join(folderPath, `${sub.studentId}.pdf`);
-            fs.writeFileSync(studentFilePath, sub.pdf.data);
-            studentFiles.push({ studentId: sub.studentId, filePath: studentFilePath });
-        });
-
-        // Call Python script
-        const pythonProcess = spawn('python', ['ml_autograde.py', assignmentPath, folderPath]);
-
-        let output = '';
-        pythonProcess.stdout.on('data', (data) => {
-            output += data.toString();
-        });
-
-        pythonProcess.stderr.on('data', (data) => {
-            console.error(`Python error: ${data}`);
-        });
-
-        pythonProcess.on('close', (code) => {
-            console.log(`Python script finished with code ${code}`);
-            try {
-                const scores = JSON.parse(output);
-                res.status(200).json({ scores });
-            } catch (e) {
-                res.status(500).json({ error: 'Failed to parse grading results' });
-            }
-
-            // Clean up temporary files
-            fs.rmSync(folderPath, { recursive: true, force: true });
-        });
-
+        const submissions = await Assignment.find().populate("specificSubmission");
+        res.json(submissions);
     } catch (error) {
-        res.status(500).json({ error: 'Auto grading failed', details: error.message });
+        res.status(500).json({ error: "Failed to fetch assignments" });
     }
 });
 
+const pdfParse = require('pdf-parse');
 
-
-// Batch Grade Assignments
-router.post("/grade", async (req, res) => {
+// Batch auto-grade multiple submissions
+router.post("/grade/batch", async (req, res) => {
     try {
-        const submissions = await Submission.find({ graded: false });
+        console.log("Inside batch grading route");
+        const { submissionIds } = req.body;
 
-        if (submissions.length === 0) {
-            return res.json({ message: "No pending submissions to grade" });
+        if (!submissionIds || submissionIds.length === 0) {
+            return res.status(400).json({ message: "No submissions provided" });
         }
 
-        const gradedSubmissions = await Promise.all(
-            submissions.map(async (submission) => {
-                const response = await openai.chat.completions.create({
-                    model: "gpt-4",
-                    messages: [
-                        { role: "system", content: "You are an AI teacher assistant grading assignments." },
-                        { role: "user", content: `Grade this assignment and provide constructive feedback:\n\n${submission.content}` }
-                    ]
+        const assignments = await Assignment.find({ specificSubmission: { $in: submissionIds } })
+            .populate("specificSubmission");
+
+        if (!assignments.length) {
+            return res.status(404).json({ message: "No assignments found" });
+        }
+
+        const teacherPdfBase64 = assignments[0].pdf.data.toString('base64');
+        const teacherPdfBuffer = Buffer.from(teacherPdfBase64, 'base64');
+        const teacherPdfData = await pdfParse(teacherPdfBuffer);
+        const teacherText = teacherPdfData.text.trim();
+
+        console.log("Extracted Teacher's Assignment (Questions):", teacherText);
+
+        let submissions = [];
+        assignments.forEach(assignment => {
+            submissions.push(...assignment.specificSubmission.filter(sub => submissionIds.includes(sub._id.toString())));
+        });
+
+        console.log("Found submissions:", submissions);
+
+        if (!submissions.length) {
+            return res.status(404).json({ message: "No submissions found" });
+        }
+
+        const gradingPromises = submissions.map(async (submission) => {
+            try {
+                const studentPdfBase64 = submission.pdf.data.toString('base64');
+                const studentPdfBuffer = Buffer.from(studentPdfBase64, 'base64');
+                const studentPdfData = await pdfParse(studentPdfBuffer);
+                const studentText = studentPdfData.text.trim();
+
+                console.log("Extracted Student's Response:", studentText);
+
+                const response = await fetch(GEMINI_API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: `You are an AI grader. Grade the student's response based on the provided assignment questions.
+                                \n**Assignment Questions (from Teacher)**:\n${teacherText}\n\n**Student's Response**:\n${studentText}\n\nEvaluate the response based on relevance, completeness, and correctness.\n\n**Output format**:\nScore: (numeric value between 0-100)\nStrengths: (brief text)\nAreas for Improvement: (brief text)`
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.5,
+                            maxOutputTokens: 300
+                        }
+                    })
                 });
 
-                const feedback = response.choices[0].message.content;
-                const grade = feedback.includes("Excellent") ? "A" :
-                              feedback.includes("Good") ? "B" :
-                              feedback.includes("Needs Improvement") ? "C" : "D";
+                if (!response.ok) {
+                    throw new Error(`Failed to grade submission: ${response.statusText}`);
+                }
 
-                submission.graded = true;
-                submission.grade = grade;
-                submission.feedback = feedback;
+                const data = await response.json();
+                const output = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+                const parsedOutput = output.match(/Score:\s*(\d+)/);
+                const strengths = output.match(/Strengths:\s*(.*)/);
+                const improvements = output.match(/Areas for Improvement:\s*(.*)/);
+
+                submission.score = parsedOutput ? parseInt(parsedOutput[1]) : 0;
+                submission.feedback = {
+                    strengths: strengths ? strengths[1] : "No feedback provided.",
+                    improvements: improvements ? improvements[1] : "No areas for improvement mentioned."
+                };
+
                 await submission.save();
 
-                return { studentName: submission.studentName, grade, feedback };
-            })
-        );
+                return {
+                    studentEmail: submission.studentEmail,
+                    assignmentId: submission.assignmentId,
+                    submittedAt: submission.submittedAt,
+                    status: submission.status,
+                    pdf: {
+                        data: studentPdfBase64,
+                        contentType: submission.pdf.contentType
+                    },
+                    score: submission.score,
+                    feedback: submission.feedback
+                };
 
-        res.json({ message: "Assignments graded", results: gradedSubmissions });
+            } catch (error) {
+                console.error(`Error grading submission ${submission._id}:`, error);
+                return { submissionId: submission._id, error: "Failed to grade submission" };
+            }
+        });
+
+        const gradedSubmissions = await Promise.all(gradingPromises);
+        res.status(200).json({ gradedSubmissions });
+
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Error grading assignments" });
+        console.error("Error in /grade/batch route:", error);
+        res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
