@@ -9,6 +9,8 @@ import DoubtAI from './doubtSolving';
 import Focus from './focusTools';
 import Notes from './notes';
 import Recommendations from './recommendation';
+import config from './config';
+
 
 
 // Dummy Home component if you haven't imported one
@@ -98,7 +100,7 @@ const StudentDashboard = () => {
   useEffect(() => {
     const fetchStudentUsername = async () => {
       try {
-        const res = await fetch('http://localhost:5000/student/auth/check', {
+        const res = await fetch(`${config.API_BASE_URL}/student/auth/check`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

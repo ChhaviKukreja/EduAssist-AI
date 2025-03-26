@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import config from './config';
+
 
 const AssignmentsTab = () => {
     const [activeTab, setActiveTab] = useState('assigned');
@@ -11,7 +13,7 @@ const AssignmentsTab = () => {
     useEffect(() => {
         const fetchStudentUsername = async () => {
             try {
-                const res = await fetch('http://localhost:5000/student/auth/check', {
+                const res = await fetch(`${config.API_BASE_URL}/student/auth/check`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -55,7 +57,7 @@ const AssignmentsTab = () => {
     // Fetch assigned assignments (from todoAssignments)
     const fetchAssignments = async () => {
         try {
-            const response = await fetch("http://localhost:5000/student/assignments", {
+            const response = await fetch(`${config.API_BASE_URL}/student/assignments`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -75,7 +77,7 @@ const AssignmentsTab = () => {
     // Fetch submitted assignments (from submittedAssignments)
     const fetchSubmissions = async () => {
         try {
-            const response = await fetch("http://localhost:5000/student/submissions", {
+            const response = await fetch(`${config.API_BASE_URL}/student/submissions`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -119,7 +121,7 @@ const AssignmentsTab = () => {
 
         try {
             setUploadingFile(true);
-            const res = await fetch(`http://localhost:5000/student/submit-assignment/${encodeURIComponent(studentUsername)}/${encodeURIComponent(assignmentId)}`, {
+            const res = await fetch(`${config.API_BASE_URL}/student/submit-assignment/${encodeURIComponent(studentUsername)}/${encodeURIComponent(assignmentId)}`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
                 body: formData

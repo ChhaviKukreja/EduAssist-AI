@@ -1,8 +1,13 @@
 require('dotenv').config();
 const mongoose = require("mongoose");
 const mongoUri = process.env.MONGO_URI;
-// const multer = require('multer');
-mongoose.connect(mongoUri);
+console.log("Mongo uri is -> ", mongoUri);
+mongoose.connect(mongoUri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  connectTimeoutMS: 60000, // 60 seconds
+  socketTimeoutMS: 60000,  // 60 seconds
+});
 
 const teacherSchema = new mongoose.Schema({
     firstName: { type: String, required: true },
