@@ -16,6 +16,10 @@ const studentRouter = require('./routes/student');
 app.use("/teacher", teacherRouter);
 app.use("/student", studentRouter);
 
+app.get("/", (req, res) => {
+  res.send("EduAssist Backend is running!");
+});
+
 
 module.exports = app;
 // const PORT = 5000;
