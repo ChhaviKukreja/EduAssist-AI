@@ -4,7 +4,9 @@ const bodyParser = require('body-parser');
 const cors = require("cors");
 const app = express();
 app.use(cors({
-    origin: "https://eduassistbackend-7cpri6vt5-chhavikukrejas-projects.vercel.app/"
+    origin: "https://eduassistbackend-git-main-chhavikukrejas-projects.vercel.app/",
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Authorization', 'Content-Type']
   }));
 app.use(express.json());
 app.use(bodyParser.json());
