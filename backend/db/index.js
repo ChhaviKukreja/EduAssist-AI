@@ -9,8 +9,7 @@ mongoose.connect("mongodb+srv://padamgoelbt23cseds:dinesh12@cluster0.sxzib.mongo
   connectTimeoutMS: 60000, // 60 seconds
   socketTimeoutMS: 60000,  // 60 seconds
 });
-
-
+//mongodb+srv://padamgoelbt23cseds:dinesh12@cluster0.sxzib.mongodb.net/EduAssist-AI?retryWrites=true&w=majority
 const teacherSchema = new mongoose.Schema({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
