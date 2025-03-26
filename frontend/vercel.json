@@ -9,7 +9,7 @@
     "redirects": [
       {
         "source": "/",
-        "destination": "/signin.jsx",
+        "destination": "/index.html",
         "permanent": true
       }
     ],
