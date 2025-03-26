@@ -1,0 +1,16 @@
+{
+    "version": 2,
+    "rewrites": [
+      {
+        "source": "/:path",
+        "destination": "https://eduassistbackend-git-main-chhavikukrejas-projects.vercel.app/:path"
+      }
+    ],
+    "routes": [
+        {
+          "src": "/",
+          "dest": "/land.jsx"
+        }
+      ]
+  }
+  
