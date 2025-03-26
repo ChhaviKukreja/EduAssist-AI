@@ -108,13 +108,15 @@ router.get("/auth/check", teacherMiddleware, (req, res) => {
 });
 
 // Upload Assignment
-router.post("/assignments", upload.single('pdf'), async (req, res) => {
-    const { title, description, uploadedBy, dueDate } = req.body;
+router.post("/assignments", teacherMiddleware, upload.single('pdf'), async (req, res) => {
+    const { title, description, dueDate } = req.body;
     console.log("hello1")
     try {
         console.log("inside try");
         const newAssignment = new Assignment({
-            title, description, uploadedBy, dueDate, pdf: {
+            title, description, dueDate,
+            uploadedBy: req.email,
+            pdf: {
                 data: req.file.buffer,
                 contentType: req.file.mimetype
             }
@@ -268,6 +270,122 @@ router.post("/grade/batch", async (req, res) => {
         console.error("Error in /grade/batch route:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
+});
+
+router.get('/analytics', teacherMiddleware, async (req, res) => {
+  try {
+    console.log("insideeee")
+    // Fetch all assignments and submissions for the authenticated teacher
+    const assignments = await Assignment.find();
+    const submissions = await Submission.find({
+      assignmentId: { $in: assignments.map(a => a._id) }
+    });
+    // Calculate Grade Distribution
+    const calculateGradeDistribution = (submissions) => {
+      const gradeRanges = {
+        'A': { min: 90, max: 100 },
+        'B': { min: 80, max: 89 },
+        'C': { min: 70, max: 79 },
+        'D/F': { min: 0, max: 69 }
+      };
+
+      const distribution = {
+        'A': 0,
+        'B': 0,
+        'C': 0,
+        'D/F': 0
+      };
+
+      submissions.forEach(submission => {
+        const score = submission.score;
+        if (score >= gradeRanges['A'].min) distribution['A']++;
+        else if (score >= gradeRanges['B'].min) distribution['B']++;
+        else if (score >= gradeRanges['C'].min) distribution['C']++;
+        else distribution['D/F']++;
+      });
+
+      // Convert to percentages
+      const total = submissions.length;
+      Object.keys(distribution).forEach(grade => {
+        distribution[grade] = Math.round((distribution[grade] / total) * 100);
+      });
+
+      return distribution;
+    };
+
+    // Calculate Submission Status
+    const calculateSubmissionStatus = (assignments, submissions) => {
+      const now = new Date();
+      const status = {
+        'On Time': 0,
+        'Late': 0,
+        'Missing': 0
+      };
+
+      assignments.forEach(assignment => {
+        const dueDate = new Date(assignment.dueDate);
+        const assignmentSubmissions = submissions.filter(
+          sub => sub.assignmentId.toString() === assignment._id.toString()
+        );
+
+        const totalStudents = 3; // You might want to replace this with actual total students
+
+        assignmentSubmissions.forEach(submission => {
+          const submittedDate = new Date(submission.submittedAt);
+          if (submittedDate <= dueDate) status['On Time']++;
+          else status['Late']++;
+        });
+
+        // Calculate missing submissions
+        const missingSubmissions = totalStudents - assignmentSubmissions.length;
+        status['Missing'] += missingSubmissions;
+      });
+
+      // Convert to percentages
+      const total = submissions.length + status['Missing'];
+      Object.keys(status).forEach(key => {
+        status[key] = Math.round((status[key] / total) * 100);
+      });
+
+      return status;
+    };
+
+    // Calculate Performance Metrics
+    const calculatePerformanceMetrics = (submissions) => {
+      if (submissions.length === 0) {
+        return {
+          'Average Score': 'N/A',
+          'Total Submissions': '0',
+          'Highest Score': 'N/A',
+          'Lowest Score': 'N/A'
+        };
+      }
+
+      const scores = submissions.map(sub => sub.score);
+      
+      return {
+        'Average Score': (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1),
+        'Total Submissions': submissions.length.toString(),
+        'Highest Score': Math.max(...scores).toString(),
+        'Lowest Score': Math.min(...scores).toString()
+      };
+    };
+
+    // Compile analytics
+    const analytics = {
+      gradeDistribution: calculateGradeDistribution(submissions),
+      submissionStatus: calculateSubmissionStatus(assignments, submissions),
+      performanceMetrics: calculatePerformanceMetrics(submissions)
+    };
+
+    res.json(analytics);
+  } catch (error) {
+    console.error('Analytics calculation error:', error);
+    res.status(500).json({ 
+      message: 'Error calculating analytics', 
+      error: error.message 
+    });
+  }
 });
 
 module.exports = router;

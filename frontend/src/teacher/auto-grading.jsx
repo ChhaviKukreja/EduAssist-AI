@@ -24,6 +24,14 @@ const AutoGrade = ({ }) => {
     dueDate: ''
   });
 
+  const [analyticsData, setAnalyticsData] = useState({
+    gradeDistribution: {},
+    submissionStatus: {},
+    performanceMetrics: {}
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   // Sample data
   const [assignments, setAssignments] = useState([]);
 
@@ -108,6 +116,9 @@ const AutoGrade = ({ }) => {
 
       const response = await fetch('http://localhost:5000/teacher/assignments', {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // Or however you're storing the token
+        },
         body: formData
       });
 
@@ -222,6 +233,7 @@ const AutoGrade = ({ }) => {
       toast.error("No submissions selected!");
       return;
     }
+    setIsProcessingGrades(true);
     console.log("yooooooooooooooo");
     try {
       const res = await fetch("http://localhost:5000/teacher/grade/batch", {
@@ -231,6 +243,7 @@ const AutoGrade = ({ }) => {
         },
         body: JSON.stringify({ submissionIds: selectedSubmissions })
       });
+      setIsProcessingGrades(false);
 
       if (!res.ok) {
         throw new Error(`Batch grading failed: ${res.statusText}`);
@@ -275,6 +288,40 @@ const AutoGrade = ({ }) => {
       })
       .catch(error => console.error("Error fetching assignments:", error));
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "analytics") {
+      fetchAnalytics();
+    }
+  }, [activeTab]);
+
+
+  const fetchAnalytics = async () => {
+    console.log("khjbn");
+    try {
+      setIsLoading(true);
+      const response = await fetch('http://localhost:5000/teacher/analytics', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics data');
+      }
+
+      const data = await response.json();
+      setAnalyticsData(data);
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Error fetching analytics:', err);
+      setError(err.message);
+      setIsLoading(false);
+    }
+  };
+
 
   const renderAssignmentsTab = () => {
     console.log(assignments);
@@ -357,9 +404,17 @@ const AutoGrade = ({ }) => {
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               onClick={handleBatchGrade}
-              disabled={!selectedSubmissions || selectedSubmissions.length === 0}
+              disabled={(!selectedSubmissions || selectedSubmissions.length === 0) && isProcessingGrades}
             >
-              Auto Grade Submissions
+              {isProcessingGrades ? (
+                <>
+                  <span className="mr-2">Processing</span>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                </>
+              ) : (
+                'Auto Grade Submissions'
+              )}
+
             </button>
           </div>
         </div>
@@ -397,9 +452,10 @@ const AutoGrade = ({ }) => {
                         className={`px-3 py-1 rounded text-sm ${submission.feedback ? 'bg-gray-100 text-gray-800' : 'bg-blue-100 text-blue-800'}`}
                         onClick={() => {
                           handleGradeClick(students);
-
                         }}
+
                       >
+
                         {submission.feedback ? 'Show Feedback' : 'Add Feedback'}
                       </button>
                     )}
@@ -428,64 +484,92 @@ const AutoGrade = ({ }) => {
 
 
   const renderAnalyticsTab = () => {
+    console.log("hehe");
+
+    if (isLoading) {
+      return (
+        <div className="bg-white rounded-lg shadow p-6 mb-6 flex justify-center items-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <span className="ml-3">Loading analytics...</span>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <div className="text-red-600 flex items-center">
+            <AlertCircle className="mr-2" />
+            <span>Error loading analytics: {error}</span>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Assignment Analytics</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Grade Distribution */}
           <div className="border rounded-lg p-4">
             <h3 className="font-medium mb-2">Grade Distribution</h3>
             <div className="flex flex-col space-y-2">
-              <div className="flex items-center">
-                <span className="w-8">A</span>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-green-600 h-2.5 rounded-full" style={{ width: '40%' }}></div>
+              {Object.entries(analyticsData.gradeDistribution || {}).map(([grade, percentage]) => (
+                <div key={grade} className="flex items-center">
+                  <span className="w-8">{grade}</span>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div
+                      className={`h-2.5 rounded-full ${grade === 'A' ? 'bg-green-600' :
+                        grade === 'B' ? 'bg-blue-600' :
+                          grade === 'C' ? 'bg-yellow-600' :
+                            'bg-red-600'
+                        }`}
+                      style={{ width: `${percentage}%` }}
+                    ></div>
+                  </div>
+                  <span className="ml-2">{percentage}%</span>
                 </div>
-                <span className="ml-2">40%</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-8">B</span>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: '35%' }}></div>
-                </div>
-                <span className="ml-2">35%</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-8">C</span>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-yellow-600 h-2.5 rounded-full" style={{ width: '15%' }}></div>
-                </div>
-                <span className="ml-2">15%</span>
-              </div>
-              <div className="flex items-center">
-                <span className="w-8">D/F</span>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-red-600 h-2.5 rounded-full" style={{ width: '10%' }}></div>
-                </div>
-                <span className="ml-2">10%</span>
-              </div>
+              ))}
             </div>
           </div>
+
+          {/* Submission Status */}
           <div className="border rounded-lg p-4">
             <h3 className="font-medium mb-2">Submission Status</h3>
             <div className="flex items-center justify-center h-32">
-              <div className="flex flex-col items-center mx-4">
-                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                  <span className="text-green-600 text-lg font-semibold">83%</span>
+              {Object.entries(analyticsData.submissionStatus || {}).map(([status, percentage]) => (
+                <div key={status} className="flex flex-col items-center mx-4">
+                  <div
+                    className={`w-16 h-16 rounded-full flex items-center justify-center ${status === 'On Time' ? 'bg-green-100' :
+                      status === 'Late' ? 'bg-yellow-100' :
+                        'bg-red-100'
+                      }`}
+                  >
+                    <span
+                      className={`text-lg font-semibold ${status === 'On Time' ? 'text-green-600' :
+                        status === 'Late' ? 'text-yellow-600' :
+                          'text-red-600'
+                        }`}
+                    >
+                      {percentage}%
+                    </span>
+                  </div>
+                  <span className="mt-2 text-sm">{status}</span>
                 </div>
-                <span className="mt-2 text-sm">On Time</span>
-              </div>
-              <div className="flex flex-col items-center mx-4">
-                <div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center">
-                  <span className="text-yellow-600 text-lg font-semibold">7%</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Performance Metrics */}
+          <div className="border rounded-lg p-4 col-span-full">
+            <h3 className="font-medium mb-2">Performance Metrics</h3>
+            <div className="grid grid-cols-3 gap-4">
+              {Object.entries(analyticsData.performanceMetrics || {}).map(([metric, value]) => (
+                <div key={metric} className="bg-gray-50 p-3 rounded">
+                  <h4 className="text-sm font-medium text-gray-600 mb-1">{metric}</h4>
+                  <p className="text-lg font-semibold">{value}</p>
                 </div>
-                <span className="mt-2 text-sm">Late</span>
-              </div>
-              <div className="flex flex-col items-center mx-4">
-                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
-                  <span className="text-red-600 text-lg font-semibold">10%</span>
-                </div>
-                <span className="mt-2 text-sm">Missing</span>
-              </div>
+              ))}
             </div>
           </div>
         </div>
