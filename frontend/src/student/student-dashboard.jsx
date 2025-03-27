@@ -10,7 +10,6 @@ import Focus from './focusTools';
 import Notes from './notes';
 import Recommendations from './recommendation';
 import config from './config';
-const API_BASE_URL = "https://eduassistbackend-chhavikukrejas-projects.vercel.app";
 
 
 

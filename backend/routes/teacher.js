@@ -283,17 +283,17 @@ router.get('/analytics', teacherMiddleware, async (req, res) => {
     // Calculate Grade Distribution
     const calculateGradeDistribution = (submissions) => {
       const gradeRanges = {
-        'A': { min: 90, max: 100 },
-        'B': { min: 80, max: 89 },
-        'C': { min: 70, max: 79 },
-        'D/F': { min: 0, max: 69 }
+        'A': { min: 70, max: 100 },
+        'B': { min: 60, max: 69 },
+        'C': { min: 50, max: 59 },
+        'D': { min: 0, max: 49 }
       };
 
       const distribution = {
         'A': 0,
         'B': 0,
         'C': 0,
-        'D/F': 0
+        'D': 0
       };
 
       submissions.forEach(submission => {
@@ -301,7 +301,7 @@ router.get('/analytics', teacherMiddleware, async (req, res) => {
         if (score >= gradeRanges['A'].min) distribution['A']++;
         else if (score >= gradeRanges['B'].min) distribution['B']++;
         else if (score >= gradeRanges['C'].min) distribution['C']++;
-        else distribution['D/F']++;
+        else distribution['D']++;
       });
 
       // Convert to percentages

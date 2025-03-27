@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import config from './config';
 
-const API_BASE_URL = "https://eduassistbackend-chhavikukrejas-projects.vercel.app";
-
-
 const AssignmentsTab = () => {
     const [activeTab, setActiveTab] = useState('assigned');
     const [fileToUpload, setFileToUpload] = useState(null);
@@ -11,7 +8,9 @@ const AssignmentsTab = () => {
     const [studentUsername, setStudentUsername] = useState('');
     const [assignedAssignments, setAssignedAssignments] = useState([]);
     const [submittedAssignments, setSubmittedAssignments] = useState([]);
+    const [gradedAssignments, setGradedAssignments] = useState([]);
 
+    // Existing authentication and fetch functions remain the same
     useEffect(() => {
         const fetchStudentUsername = async () => {
             try {
@@ -35,8 +34,8 @@ const AssignmentsTab = () => {
         fetchStudentUsername();
     }, []);
 
-     // Get days remaining until due date
-     const getDaysRemaining = (dateString) => {
+    // Helper functions for date formatting
+    const getDaysRemaining = (dateString) => {
         const dueDate = new Date(dateString);
         const today = new Date();
         const diffTime = dueDate - today;
@@ -44,19 +43,17 @@ const AssignmentsTab = () => {
         return diffDays;
     };
 
-    // Format due date
     const formatDueDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
     };
 
-    // Format submission date
     const formatSubmissionDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     };
 
-    // Fetch assigned assignments (from todoAssignments)
+    // Fetch functions (with minor modifications to match UI)
     const fetchAssignments = async () => {
         try {
             const response = await fetch(`${config.API_BASE_URL}/student/assignments`, {
@@ -76,7 +73,6 @@ const AssignmentsTab = () => {
         }
     };
 
-    // Fetch submitted assignments (from submittedAssignments)
     const fetchSubmissions = async () => {
         try {
             const response = await fetch(`${config.API_BASE_URL}/student/submissions`, {
@@ -96,22 +92,28 @@ const AssignmentsTab = () => {
         }
     };
 
+    // Add a placeholder fetch for graded assignments
+    const fetchGradedAssignments = async () => {
+        // This would typically come from your backend
+        setGradedAssignments([]);
+    };
+
     useEffect(() => {
         fetchAssignments();
+        fetchGradedAssignments();
     }, [studentUsername]);
 
     useEffect(() => {
         if (activeTab === "submitted") fetchSubmissions();
     }, [activeTab, studentUsername]);
 
-    // Handle file selection
+    // File upload handlers
     const handleFileChange = (e, assignmentId) => {
         if (e.target.files.length > 0) {
             setFileToUpload({ file: e.target.files[0], assignmentId });
         }
     };
 
-    // Upload submission and move assignment from "Assigned" to "Submitted"
     const uploadSubmission = async (assignmentId) => {
         if (!fileToUpload || fileToUpload.assignmentId !== assignmentId) {
             alert("Please select a file for this assignment.");
@@ -154,26 +156,33 @@ const AssignmentsTab = () => {
         }
     };
 
-    return (
-        <div className="assignments-container">
-            <section className="assignments-section">
-                <h1>Assignments</h1>
+    // Placeholder download function
+    const downloadSubmission = (fileUrl, fileName) => {
+        // Implement actual download logic
+        console.log(`Downloading ${fileName} from ${fileUrl}`);
+    };
 
-                <div className="assignment-tabs">
+    return (
+        <div className="bg-[#121621] min-h-screen text-white p-6">
+            <div className="max-w-4xl mx-auto">
+                <h1 className="text-2xl font-bold mb-6">Assignments</h1>
+
+                {/* Tabs */}
+                <div className="flex mb-6 bg-[#1E2433] rounded-lg p-1">
                     <button
-                        className={`tab-button ${activeTab === 'assigned' ? 'active' : ''}`}
+                        className={`flex-1 py-2 rounded-lg ${activeTab === 'assigned' ? 'bg-[#5570F1] text-white' : 'text-[#8991A4] hover:bg-[#2A3242]'}`}
                         onClick={() => setActiveTab('assigned')}
                     >
                         Assigned
                     </button>
                     <button
-                        className={`tab-button ${activeTab === 'submitted' ? 'active' : ''}`}
+                        className={`flex-1 py-2 rounded-lg ${activeTab === 'submitted' ? 'bg-[#5570F1] text-white' : 'text-[#8991A4] hover:bg-[#2A3242]'}`}
                         onClick={() => setActiveTab('submitted')}
                     >
                         Submitted
                     </button>
                     <button
-                        className={`tab-button ${activeTab === 'graded' ? 'active' : ''}`}
+                        className={`flex-1 py-2 rounded-lg ${activeTab === 'graded' ? 'bg-[#5570F1] text-white' : 'text-[#8991A4] hover:bg-[#2A3242]'}`}
                         onClick={() => setActiveTab('graded')}
                     >
                         Graded
@@ -182,158 +191,107 @@ const AssignmentsTab = () => {
 
                 {/* Assigned Assignments Tab */}
                 {activeTab === 'assigned' && (
-                    <div className="assignments-list">
-                        <h2>Assigned Tasks</h2>
+                    <div>
                         {assignedAssignments.length > 0 ? (
                             assignedAssignments.map((assignment) => (
-                                <div className="assignment-card" key={assignment._id}>
-                                    <div className="assignment-header">
-                                        <h3>{assignment.title}</h3>
+                                <div key={assignment._id} className="bg-[#1E2433] rounded-lg p-4 mb-4">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h3 className="font-semibold">{assignment.title}</h3>
+                                        <span className={`text-sm ${getDaysRemaining(assignment.dueDate) < 3 ? 'text-red-500' : 'text-[#8991A4]'}`}>
+                                            {formatDueDate(assignment.dueDate)} ({getDaysRemaining(assignment.dueDate)} days remaining)
+                                        </span>
                                     </div>
 
-                                    <p className="assignment-description">{assignment.description}</p>
+                                    <p className="text-[#8991A4] mb-4">{assignment.description}</p>
 
-                                    <div className="assignment-details">
-                                        <p className="due-date">
-                                            <strong>Due:</strong> {formatDueDate(assignment.dueDate)}
-                                            <span className={`days-remaining ${getDaysRemaining(assignment.dueDate) < 3 ? 'urgent' : ''}`}>
-                                                ({getDaysRemaining(assignment.dueDate)} days remaining)
-                                            </span>
-                                        </p>
-                                    </div>
-
-                                    <div className="assignment-submission">
-                                        <h4>Submit Your Work</h4>
-                                        <div className="file-upload">
+                                    <div className="bg-[#121621] rounded-lg p-3">
+                                        <div className="mb-3">
                                             <input
                                                 type="file"
                                                 id={`file-upload-${assignment._id}`}
                                                 accept=".pdf,.doc,.docx"
                                                 onChange={(e) => handleFileChange(e, assignment._id)}
+                                                className="hidden"
                                             />
-                                            <label htmlFor={`file-upload-${assignment._id}`}>
-                                                {fileToUpload && fileToUpload.assignmentId === assignment._id ?
-                                                    fileToUpload.file.name : "Choose PDF file"}
+                                            <label 
+                                                htmlFor={`file-upload-${assignment._id}`}
+                                                className="block w-full text-center py-2 bg-[#2A3242] text-[#8991A4] rounded-lg cursor-pointer"
+                                            >
+                                                {fileToUpload && fileToUpload.assignmentId === assignment._id 
+                                                    ? fileToUpload.file.name 
+                                                    : "Choose PDF file"}
                                             </label>
                                         </div>
                                         <button
-                                            className="submit-button"
+                                            className="w-full py-2 bg-[#5570F1] text-white rounded-lg disabled:opacity-50"
                                             onClick={() => uploadSubmission(assignment._id)}
                                             disabled={!fileToUpload || fileToUpload.assignmentId !== assignment._id || uploadingFile}
                                         >
-                                            {uploadingFile && fileToUpload && fileToUpload.assignmentId === assignment._id ?
-                                                "Uploading..." : "Submit Assignment"}
+                                            {uploadingFile && fileToUpload && fileToUpload.assignmentId === assignment._id 
+                                                ? "Uploading..." 
+                                                : "Submit Assignment"}
                                         </button>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            <p className="no-assignments">No assignments pending submission.</p>
+                            <p className="text-center text-[#8991A4]">No assignments pending submission.</p>
                         )}
                     </div>
                 )}
 
                 {/* Submitted Assignments Tab */}
                 {activeTab === 'submitted' && (
-                    <div className="assignments-list submitted-list">
-                        <h2>Submitted Assignments</h2>
+                    <div>
                         {submittedAssignments.length > 0 ? (
                             submittedAssignments.map((submission) => (
-                                <div className="assignment-card submitted" key={submission.assignmentId}>
-                                    <div className="assignment-header">
-                                        <h3>{submission.title}</h3>
-                                        <span className="status-badge">Submitted</span>
+                                <div key={submission.assignmentId} className="bg-[#1E2433] rounded-lg p-4 mb-4">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h3 className="font-semibold">{submission.title}</h3>
+                                        <span className="text-green-500 text-sm">Submitted</span>
                                     </div>
 
-                                    <p className="assignment-description">
-                                        {submission.description || "Assignment submitted successfully."}
-                                    </p>
+                                    <p className="text-[#8991A4] mb-2">{formatSubmissionDate(submission.submittedAt)}</p>
 
-                                    <div className="assignment-details">
-                                        <p className="submission-date">
-                                            <strong>Submitted:</strong> {formatSubmissionDate(submission.submittedAt)}
-                                        </p>
-                                        <p className="file-info">
-                                            <span className="file-name">{submission.fileName}</span>
-                                            <span className="file-size"> ({submission.fileSize})</span>
-                                        </p>
-                                    </div>
-
-                                    <div className="assignment-actions">
+                                    <div className="bg-[#121621] rounded-lg p-3 flex justify-between items-center">
+                                        <div>
+                                            <p className="text-[#8991A4]">{submission.fileName}</p>
+                                            <p className="text-xs text-[#8991A4]">({submission.fileSize})</p>
+                                        </div>
                                         <button
-                                            className="download-button"
+                                            className="py-2 px-4 bg-[#5570F1] text-white rounded-lg"
                                             onClick={() => downloadSubmission(submission.fileUrl, submission.fileName)}
                                         >
-                                            Download Submission
+                                            Download
                                         </button>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            <p className="no-assignments">No submitted assignments yet.</p>
+                            <p className="text-center text-[#8991A4]">No submitted assignments.</p>
                         )}
                     </div>
                 )}
 
                 {/* Graded Assignments Tab */}
                 {activeTab === 'graded' && (
-                    <div className="assignments-list graded-list">
-                        <h2>Graded Assignments</h2>
+                    <div>
                         {gradedAssignments.length > 0 ? (
-                            gradedAssignments.map((submission) => (
-                                <div className="assignment-card graded" key={submission._id || submission.assignmentId}>
-                                    <div className="assignment-header">
-                                        <h3>{submission.title || submission.assignmentTitle}</h3>
-                                        <span className="status-badge graded">Graded</span>
+                            gradedAssignments.map((assignment) => (
+                                <div key={assignment._id} className="bg-[#1E2433] rounded-lg p-4 mb-4">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h3 className="font-semibold">{assignment.title}</h3>
+                                        <span className="text-purple-500 text-sm">Graded</span>
                                     </div>
-
-                                    <p className="assignment-description">
-                                        {submission.description || "Assignment has been graded."}
-                                    </p>
-
-                                    <div className="assignment-details">
-                                        <p className="submission-date">
-                                            <strong>Submitted:</strong> {formatSubmissionDate(submission.submittedAt)}
-                                        </p>
-                                        <p className="grade-info">
-                                            <strong>Grade:</strong> {submission.grade || "A"}
-                                        </p>
-                                        <p className="file-info">
-                                            <span className="file-name">{submission.fileName}</span>
-                                            <span className="file-size"> ({submission.fileSize})</span>
-                                        </p>
-                                    </div>
-
-                                    <div className="assignment-actions">
-                                        <button
-                                            className="download-button"
-                                            onClick={() => downloadSubmission(
-                                                submission._id || submission.assignmentId,
-                                                submission.fileName
-                                            )}
-                                        >
-                                            Download Submission
-                                        </button>
-                                        {submission.feedbackFile && (
-                                            <button
-                                                className="feedback-button"
-                                                onClick={() => downloadSubmission(
-                                                    submission._id || submission.assignmentId,
-                                                    "Feedback-" + submission.fileName
-                                                )}
-                                            >
-                                                Download Feedback
-                                            </button>
-                                        )}
-                                    </div>
+                                    {/* Add more graded assignment details as needed */}
                                 </div>
                             ))
                         ) : (
-                            <p className="no-assignments">No graded assignments yet.</p>
+                            <p className="text-center text-[#8991A4]">No graded assignments yet.</p>
                         )}
                     </div>
                 )}
-            </section>
+            </div>
         </div>
     );
 };
