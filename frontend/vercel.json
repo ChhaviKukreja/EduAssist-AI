@@ -3,7 +3,7 @@
     "rewrites": [
       {
         "source": "/:path*",
-        "destination": "https://eduassistbackend-chhavikukreja-chhavikukrejas-projects.vercel.app/:path*"
+        "destination": "https://eduassistbackend-chhavikukrejas-projects.vercel.app/:path*"
       }
     ],
     "redirects": [

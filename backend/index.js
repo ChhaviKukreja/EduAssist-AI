@@ -14,7 +14,7 @@ mongoose.connect("mongodb+srv://padamgoelbt23cseds:dinesh12@cluster0.sxzib.mongo
   socketTimeoutMS: 60000,  // 60 seconds
 });
 app.use(cors({
-    origin: "https://eduassistbackend-chhavikukreja-chhavikukrejas-projects.vercel.app/",
+    origin: "https://eduassistbackend-chhavikukrejas-projects.vercel.app/",
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Authorization', 'Content-Type']
   }));
