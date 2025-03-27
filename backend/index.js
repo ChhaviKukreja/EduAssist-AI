@@ -7,12 +7,12 @@ const mongoose = require("mongoose");
 
 // const mongoUri = process.env.MONGO_URI;
 //console.log("Mongo uri is -> ", mongoUri);
-mongoose.connect("mongodb+srv://padamgoelbt23cseds:dinesh12@cluster0.sxzib.mongodb.net/EduAssist-AI?retryWrites=true&w=majority", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  connectTimeoutMS: 60000, // 60 seconds
-  socketTimeoutMS: 60000,  // 60 seconds
-});
+// mongoose.connect("mongodb+srv://padamgoelbt23cseds:dinesh12@cluster0.sxzib.mongodb.net/EduAssist-AI?retryWrites=true&w=majority", {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+//   connectTimeoutMS: 60000, // 60 seconds
+//   socketTimeoutMS: 60000,  // 60 seconds
+// });
 app.use(cors({
     origin: "https://eduassistbackend-chhavikukrejas-projects.vercel.app/",
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
