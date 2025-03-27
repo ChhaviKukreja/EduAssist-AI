@@ -2,7 +2,7 @@ require('dotenv').config();
 const mongoose = require("mongoose");
 console.log("yoooo");
 const mongoUri = process.env.MONGO_URI;
-//console.log("Mongo uri is -> ", mongoUri);
+console.log("Mongo uri is -> ", mongoUri);
 mongoose.connect(mongoUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
