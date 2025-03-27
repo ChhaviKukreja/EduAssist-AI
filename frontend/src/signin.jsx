@@ -61,6 +61,7 @@ const SignIn = () => {
         // Use role in the endpoint
         const endpoint = `${config.API_BASE_URL}/${formData.role}/signin`;
         console.log("reached endpoint");
+        console.log("A", config.API_BASE_URL);
         
         const response = await fetch(endpoint, {
           method: "POST",
