@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 console.log("yoooo");
 // const mongoUri = process.env.MONGO_URI;
 //console.log("Mongo uri is -> ", mongoUri);
-mongoose.connect("mongodb+srv://padamgoelbt23cseds:dinesh12@cluster0.sxzib.mongodb.net/EduAssist-AI?retryWrites=true&w=majority", {
+mongoose.connect("mongodb+srv://padam_007:hanumanji@cluster1.vzqhy.mongodb.net/EduAssist?retryWrites=true&w=majority", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   connectTimeoutMS: 60000, // 60 seconds
