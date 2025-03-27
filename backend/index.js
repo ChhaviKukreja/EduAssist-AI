@@ -14,7 +14,7 @@ const mongoose = require("mongoose");
 //   socketTimeoutMS: 60000,  // 60 seconds
 // });
 app.use(cors({
-    origin: "https://eduassistbackend-chhavikukrejas-projects.vercel.app/",
+    origin: "https://edu-assist-ai-f.vercel.app",
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Authorization', 'Content-Type']
   }));
