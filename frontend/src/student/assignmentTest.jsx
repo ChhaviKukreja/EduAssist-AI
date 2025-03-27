@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import config from './config';
 
-const API_BASE_URL = "https://eduassistbackend-chhavikukrejas-projects.vercel.app/";
+const API_BASE_URL = "https://eduassistbackend-chhavikukrejas-projects.vercel.app";
 
 
 const AssignmentsTab = () => {

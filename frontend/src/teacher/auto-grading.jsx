@@ -3,7 +3,7 @@ import { X, Upload, FileText, Check, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import config from './config';
-const API_BASE_URL = "https://eduassistbackend-chhavikukrejas-projects.vercel.app/";
+const API_BASE_URL = "https://eduassistbackend-chhavikukrejas-projects.vercel.app";
 
 const AutoGrade = ({ }) => {
   // State management

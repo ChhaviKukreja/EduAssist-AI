@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import config from './config';
-const API_BASE_URL = "https://eduassistbackend-chhavikukrejas-projects.vercel.app/";
+const API_BASE_URL = "https://eduassistbackend-chhavikukrejas-projects.vercel.app";
 
 const SignIn = () => {
   const navigate = useNavigate();
