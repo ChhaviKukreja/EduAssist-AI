@@ -3,12 +3,7 @@ const mongoose = require("mongoose");
 console.log("yoooo");
 const mongoUri = process.env.MONGO_URI;
 console.log("Mongo uri is -> ", mongoUri);
-mongoose.connect(mongoUri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  connectTimeoutMS: 60000, // 60 seconds
-  socketTimeoutMS: 60000,  // 60 seconds
-});
+mongoose.connect(mongoUri);
 //mongodb+srv://padamgoelbt23cseds:dinesh12@cluster0.sxzib.mongodb.net/EduAssist-AI?retryWrites=true&w=majority
 const teacherSchema = new mongoose.Schema({
     firstName: { type: String, required: true },
