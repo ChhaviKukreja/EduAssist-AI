@@ -1,9 +1,9 @@
-//require('dotenv').config();
+require('dotenv').config();
 const mongoose = require("mongoose");
 console.log("yoooo");
-// const mongoUri = process.env.MONGO_URI;
+const mongoUri = process.env.MONGO_URI;
 //console.log("Mongo uri is -> ", mongoUri);
-mongoose.connect("mongodb+srv://padam_007:hanumanji@cluster1.vzqhy.mongodb.net/EduAssist?retryWrites=true&w=majority", {
+mongoose.connect(mongoUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   connectTimeoutMS: 60000, // 60 seconds
