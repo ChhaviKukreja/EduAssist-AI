@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Upload, FileText, Check, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
-//import config from './config';
-const API_BASE_URL = process.env.API_BASE_URL;
+import config from './config';
+const API_BASE_URL = "https://eduassistbackend-chhavikukrejas-projects.vercel.app/";
 
 const AutoGrade = ({ }) => {
   // State management
@@ -43,7 +43,7 @@ const AutoGrade = ({ }) => {
   useEffect(() => {
     const fetchTeacherUsername = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/teacher/auth/check`, {
+        const res = await fetch(`${config.API_BASE_URL}/teacher/auth/check`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ const AutoGrade = ({ }) => {
       formData.append('dueDate', formInputs.dueDate);
       formData.append('pdf', selectedFile);
 
-      const response = await fetch(`${API_BASE_URL}/teacher/assignments`, {
+      const response = await fetch(`${config.API_BASE_URL}/teacher/assignments`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`, // Or however you're storing the token
@@ -167,7 +167,7 @@ const AutoGrade = ({ }) => {
 
   const fetchAssignments = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/assignments`, {
+      const response = await fetch(`${config.API_BASE_URL}/teacher/assignments`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -238,7 +238,7 @@ const AutoGrade = ({ }) => {
     setIsProcessingGrades(true);
     console.log("yooooooooooooooo");
     try {
-      const res = await fetch(`${API_BASE_URL}/teacher/grade/batch`, {
+      const res = await fetch(`${config.API_BASE_URL}/teacher/grade/batch`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -282,7 +282,7 @@ const AutoGrade = ({ }) => {
 
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/teacher/submissions`) // Adjust the API URL as needed
+    fetch(`${config.API_BASE_URL}/teacher/submissions`) // Adjust the API URL as needed
       .then(response => response.json())
       .then(data => {
         console.log("Assignments with submissions:", data);
@@ -302,7 +302,7 @@ const AutoGrade = ({ }) => {
     console.log("khjbn");
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_BASE_URL}/teacher/analytics`, {
+      const response = await fetch(`${config.API_BASE_URL}/teacher/analytics`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

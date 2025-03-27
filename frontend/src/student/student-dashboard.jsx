@@ -9,8 +9,8 @@ import DoubtAI from './doubtSolving';
 import Focus from './focusTools';
 import Notes from './notes';
 import Recommendations from './recommendation';
-// import config from './config';
-const API_BASE_URL = process.env.API_BASE_URL;
+import config from './config';
+const API_BASE_URL = "https://eduassistbackend-chhavikukrejas-projects.vercel.app/";
 
 
 
@@ -101,7 +101,7 @@ const StudentDashboard = () => {
   useEffect(() => {
     const fetchStudentUsername = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/student/auth/check`, {
+        const res = await fetch(`${config.API_BASE_URL}/student/auth/check`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

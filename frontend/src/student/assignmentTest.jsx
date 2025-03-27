@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-// import config from './config';
+import config from './config';
 
-const API_BASE_URL = process.env.API_BASE_URL;
+const API_BASE_URL = "https://eduassistbackend-chhavikukrejas-projects.vercel.app/";
 
 
 const AssignmentsTab = () => {
@@ -15,7 +15,7 @@ const AssignmentsTab = () => {
     useEffect(() => {
         const fetchStudentUsername = async () => {
             try {
-                const res = await fetch(`${API_BASE_URL}/student/auth/check`, {
+                const res = await fetch(`${config.API_BASE_URL}/student/auth/check`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ const AssignmentsTab = () => {
     // Fetch assigned assignments (from todoAssignments)
     const fetchAssignments = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/student/assignments`, {
+            const response = await fetch(`${config.API_BASE_URL}/student/assignments`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -79,7 +79,7 @@ const AssignmentsTab = () => {
     // Fetch submitted assignments (from submittedAssignments)
     const fetchSubmissions = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/student/submissions`, {
+            const response = await fetch(`${config.API_BASE_URL}/student/submissions`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -123,7 +123,7 @@ const AssignmentsTab = () => {
 
         try {
             setUploadingFile(true);
-            const res = await fetch(`${API_BASE_URL}/student/submit-assignment/${encodeURIComponent(studentUsername)}/${encodeURIComponent(assignmentId)}`, {
+            const res = await fetch(`${config.API_BASE_URL}/student/submit-assignment/${encodeURIComponent(studentUsername)}/${encodeURIComponent(assignmentId)}`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
                 body: formData

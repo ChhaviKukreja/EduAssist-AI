@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-const API_BASE_URL = process.env.API_BASE_URL;
+import config from './config';
+const API_BASE_URL = "https://eduassistbackend-chhavikukrejas-projects.vercel.app/";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ const SignIn = () => {
       try {
         console.log("inside try");
         // Use role in the endpoint
-        const endpoint = `${API_BASE_URL}/${formData.role}/signin`;
+        const endpoint = `${config.API_BASE_URL}/${formData.role}/signin`;
         console.log("reached endpoint");
         
         const response = await fetch(endpoint, {
