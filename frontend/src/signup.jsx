@@ -79,7 +79,7 @@ const SignUp = () => {
   
       try {
         // Use role in the endpoint
-        const endpoint = `http://localhost:5000/${formData.role}/signup`;
+        const endpoint = `${API_BASE_URL}/${formData.role}/signup`;
         
         const response = await fetch(endpoint, {
           method: "POST",
