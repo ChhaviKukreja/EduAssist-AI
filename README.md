@@ -54,6 +54,17 @@ EduAssist directly contributes to UN Sustainable Development Goal 4 by:
 
 Visit [https://edu-assist-ai-f.vercel.app/](https://edu-assist-ai-f.vercel.app/) to create an account and begin your free trial.
 
+## Tech Stack
+Frontend: React.js, Tailwind CSS
+
+Backend: Node.js, Express.js
+
+Database: MongoDB
+
+OCR: Google Cloud Vision (for handwritten inputs)
+
+Storage: MongoDB (base64-encoded PDFs)
+
 ## Setup Instructions
 
 ### Prerequisites
