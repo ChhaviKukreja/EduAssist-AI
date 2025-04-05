@@ -2,7 +2,7 @@
 
 ## Empowering Educators, Enhancing Learning
 
-![EduAssist Logo](/assets/images/final logo.png)
+![EduAssist Logo](/assets/final logo.png)
 ## Overview
 
 EduAssist is an AI-powered educational assistant designed to reduce the burden on overworked teachers while providing students with high-quality, personalized feedback. By automating the grading process and generating constructive, individualized feedback, EduAssist enables educators to focus more on teaching and mentoring rather than administrative tasks.
