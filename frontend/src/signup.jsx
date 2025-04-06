@@ -98,7 +98,7 @@ const SignUp = () => {
         
         // Redirect based on role
         if (formData.role === 'teacher') {
-          navigate('/teacher/dashboard'); 
+          navigate('/teacher/dashboardNew'); 
         } else if (formData.role === 'student') {
           navigate('/student/dashboard');
         }

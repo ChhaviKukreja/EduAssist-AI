@@ -8,61 +8,67 @@ mongoose.connect(mongoUri, {
   useUnifiedTopology: true,
   connectTimeoutMS: 60000, // 60 seconds
   socketTimeoutMS: 60000,  // 60 seconds
-});//mongodb+srv://padamgoelbt23cseds:dinesh12@cluster0.sxzib.mongodb.net/EduAssist-AI?retryWrites=true&w=majority
+});
 const teacherSchema = new mongoose.Schema({
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true }, // Hashed password stored here
-    role: { type: String, enum: ["teacher", "student"], required: true }
-    // agreedToTerms: { type: Boolean, required: true },
-  });
-  
-  const studentSchema = new mongoose.Schema({
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { type: String, enum: ["teacher", "student"], required: true },
-    todoAssignments: [{
-        type:mongoose.Schema.Types.ObjectID,
-        ref:"Assignment"  
-    }],
-    submittedAssignments: [{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Submission"
-    }]
-  });
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true }, // Hashed password stored here
+  role: { type: String, enum: ["teacher", "student"], required: true }
+  // agreedToTerms: { type: Boolean, required: true },
+});
+
+const studentSchema = new mongoose.Schema({
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { type: String, enum: ["teacher", "student"], required: true },
+  todoAssignments: [{
+      type:mongoose.Schema.Types.ObjectID,
+      ref:"Assignment"  
+  }],
+  submittedAssignments: [{
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"Submission"
+  }]
+});
 
 const assignmentSchema = new mongoose.Schema({
-    title: String,
-    description: String,
-    uploadedBy: String, // Teacher ID
-    dueDate: Date,
-    pdf: {
-      data: Buffer,
-      contentType: String
-    },
-    specificSubmission: [{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Submission"
-    }]
+  title: String,
+  description: String,
+  uploadedBy: String, // Teacher ID
+  dueDate: Date,
+  pdf: {
+    data: Buffer,
+    contentType: String
+  },
+  specificSubmission: [{
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"Submission"
+  }],
+  extractedImages: [{
+    data: Buffer,
+    contentType: String
+}],
+  extractedText: { type: String, default: null }
 });
 
 const submissionSchema = new mongoose.Schema({  
-    studentEmail: String,
-    assignmentId: mongoose.Schema.Types.ObjectId,
-    submittedAt: { type: Date, default: Date.now },
-    status: String,
-    pdf: {
-      data: Buffer,
-      contentType: String
-    },
-    score: Number,
-    feedback: [{
-      strengths: String,
-      improvements: String
-    }]
+  title: String,  
+  studentEmail: String,
+  assignmentId: mongoose.Schema.Types.ObjectId,
+  submittedAt: { type: Date, default: Date.now },
+  status: String,
+  pdf: {
+    data: Buffer,
+    contentType: String
+  },
+  score: Number,
+  feedback: [{
+    strengths: String,
+    improvements: String
+  }]
 });
 
 const Submission = mongoose.model("Submission", submissionSchema);
@@ -74,8 +80,8 @@ const Student = mongoose.model("Student", studentSchema);
 // const upload = multer({ storage: storage });
 
 module.exports = {
-    Teacher,
-    Student,
-    Assignment,
-    Submission
+  Teacher,
+  Student,
+  Assignment,
+  Submission
 }

@@ -1,0 +1,14 @@
+{
+    "type": "service_account",
+    "project_id": "eduassist-ai",
+    "private_key_id": "1eca352cc1ab11be6710accac1063c1f0f5fd513",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDY6XvVMM4R1dke\nM36U+9IRCsLJjwivoB95qhEqbfDbCxkVbU6SdWhR6eTSM93PuN+DYfAVli6iD+Tb\nxJ5mvla938MPLoxF6tpx5YdMWwQIvuN2P/xWjP92qj9uB+zWhSj6ar8czYdd+6u3\n7F1duMCT0yBIOlhqRn+Z7IyAFGrt6qkMAELWfwhpBrlDXQ+EnbAZXwWD6osAwoT0\n80D08yu+PtdHty4yH0caGPzYLl3zJQSGN9E/k/1fC6r2AThAMWt2ZGagQPB+97rw\nIQGHwg9x6I8DfIdcIEGkDfIR3H0a4cSoM3wLtjziy6W+AIqdfCJtQYaIzBvFBS7x\nLmGK6m9NAgMBAAECggEAabE/Hy7UQlmGnVIvHC4l+hrZtffFnjnyDEjja169rSXX\nt5qW3gNqbPuAfTI7oxMsieqnXwVaPKps8+721g5p2sQU2iluvUTF4xiZ2AlDSnWl\nBQIBlTTH58zl8lnXO+IPiRGJhOHa018lmY2JIvk6kO0ffkI7wbEPTPO3tFL+lWVL\n/8PkPXzW0XkpLcMvL1RniISsQJPLrfIFpLh+T3LBYkXeSOcvYC040eM7CZ1FYMIs\ny1NsUKCADp2ZuFpLU9r7HAMNXmheHV0uOvs2tROANsXvOzaLV/UmE9UEkDxDa/lh\nO9HmWHSxeN2ryt/+4hw3GM8VNonsxYIUX5Ndk8OnSwKBgQDwXp24aZrugIlxeSQ0\nP5Ua00anAn4YzQmn24HI3odMzpdUGpexQNToBdoiRfAZq+E8KY3iqBxz2FF/P58R\nuQtEOBqkAZOAj5BRKmo/pvdSd3+SuQvNfdiYb3tnZ7AKNr/822MRo8sClllQOKce\nv+9ASWSkpjHuVgHSqlgAnKGN9wKBgQDnBF/kJAj0kWyzZOeWivAmQHASwQ858G7D\n1Tt+H+WDUlA38hzUC26bUsqFSIP6yhecRjs/tTTLBHefLDljatHXpV1zOieaWnz2\nEQr6lesu7L2RumgkzW/eRI2JPWB93z9VDEjy5QzzTHEDmSkAro1HTVf1PIUfjKC7\ngV+Gw66r2wKBgG4GAQ+eVyqAb2kfWDEKQYfL2XUssOdNQvQwh5GYOjov/hijK3gZ\nAttJgnVZqfM2N5zAMI/k/1EPXQ5v4rHMD5okTB1yE0AvdpGQZp3IIUEALcbNKNfg\nmLn9nXDRh0TFls945Dn4zT3b7/nGVMjAdhTpA0ZSRFyhxafWDP4Ks/A1AoGBAMnq\nL+nWeSFR7gFKI4SYAVhdn9c0eJt6g0WVHP+a316NVmHfssS/DTii/zHJdNmBQ2uq\nkuSW/AKp7+fmnm4/khN6jJhG7xBhILFtqfvlhv6nmvVBSP9JtApAPrkCNVEvDErI\nhwYNnukUGf88IfNfnUoB1uwYrn4pyt64MAc5B3VbAoGASk1hLyQmqqYnF0JdhNmj\n05HRg2UzZAbgP0uwtTutJdOjf5JnBVVAFym8k4+2W79CE1/IDwXk99DxBYWJVKe9\nbYRFRThFXJjLwX0jjThK2bxRyghTGtI+yy5Gg4b5OdHyWNyeawQn3K4rm4eNeJaW\n6+xeLLn15lfjbxwKkbDWO74=\n-----END PRIVATE KEY-----\n",
+    "client_email": "eduassist@eduassist-ai.iam.gserviceaccount.com",
+    "client_id": "103045650562319472930",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/eduassist%40eduassist-ai.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com"
+  }
+  

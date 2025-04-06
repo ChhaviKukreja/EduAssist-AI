@@ -66,15 +66,7 @@ const AutoGrade = ({ }) => {
 
     fetchTeacherUsername();
   }, []);
-
-
-  // Action handlers
-
-  //const [fileName, setFileName] = useState('');
   const fileInputRef = useRef(null);
-
-
-  // Trigger hidden input on "browse" click
   const handleBrowseClick = () => {
     fileInputRef.current.click();
   };
@@ -189,25 +181,6 @@ const AutoGrade = ({ }) => {
     setShowFeedbackForm(true);
   };
 
-  const handleNewAssignmentSubmit = (e) => {
-    e.preventDefault();
-
-    // Get form data
-    const formData = new FormData(e.target);
-    const newAssignment = {
-      id: assignments.length + 1,
-      title: formData.get('title'),
-      dueDate: formData.get('dueDate'),
-      status: 'active',
-      totalSubmissions: 0,
-      pendingGrading: 0
-    };
-
-    // Add new assignment to state
-    setAssignments([...assignments, newAssignment]);
-    setShowNewAssignmentForm(false);
-  };
-
   // Render the main content area based on active tab
   const renderMainContent = () => {
     switch (activeTab) {
@@ -228,14 +201,14 @@ const AutoGrade = ({ }) => {
     );
   };
 
-
   const handleBatchGrade = async () => {
     if (selectedSubmissions.length === 0) {
       toast.error("No submissions selected!");
       return;
     }
+    
     setIsProcessingGrades(true);
-    console.log("yooooooooooooooo");
+    
     try {
       const res = await fetch(`${config.API_BASE_URL}/teacher/grade/batch`, {
         method: "POST",
@@ -244,37 +217,36 @@ const AutoGrade = ({ }) => {
         },
         body: JSON.stringify({ submissionIds: selectedSubmissions })
       });
-      setIsProcessingGrades(false);
-
+        
       if (!res.ok) {
         throw new Error(`Batch grading failed: ${res.statusText}`);
       }
-
+        
       const data = await res.json();
-      console.log("Response from server:", data);
-      toast.success("Batch grading completed!");
-
+      
+      // Update the submissions state
       const updatedSubmissions = submissions.map(sub => {
-        const gradedSub = res.data.results.find(r => r.submissionId === sub._id);
+        const gradedSub = data.results.find(r => r.submissionId === sub._id);
         return gradedSub ? { ...sub, score: gradedSub.score, feedback: gradedSub.feedback } : sub;
       });
-
+        
       setSubmissions(updatedSubmissions);
       setShowFeedbackForm(true);
       setSelectedSubmissions([]);
-      setSelectedStudent(selectedSubmissions); // Get the first selected submission
-
-      console.log("Before alert...");
-      // alert("Auto-grading completed successfully!");
-      // console.log("After alert...");
-      // //navigate("/auto-grading");
-      // window.location.reload()
-
-      // // Switch to "submissions" tab
-      // setActiveTab("submissions");
-
-      // Navigate to the auto-grading page
+      setSelectedStudent(selectedSubmissions[0]); // Get the first selected submission
+      
+      toast.success("Batch grading completed!");
+      
+      // Show alert and reload after user clicks OK
+      alert("Auto-grading completed successfully!");
+      
+      // Use setTimeout to make sure the alert is fully processed before reload
+      setTimeout(() => {
+        window.location.reload();
+      }, 100); // Small delay to ensure alert is dismissed
+      
     } catch (err) {
+      setIsProcessingGrades(false);
       toast.error("Batch grading failed!");
     }
   };

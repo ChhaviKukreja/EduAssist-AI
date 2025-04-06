@@ -7,6 +7,7 @@ import TeacherDashboard from './teacher/teacher-dashboard';
 import StudentDashboard from './student/student-dashboard';
 //import TeacherDashboard from './teacher/dashboard-updated';
 import AutoGrade from './teacher/auto-grading';
+import TeacherDashboardNew from "./teacher/test.jsx";
 import assignmentsTab from "./student/assignmentTest";
 import calendarTab from "./student/calendar";
 import chatsTab from "./student/chatMessage.jsx";
@@ -34,6 +35,7 @@ function App() {
       <Route path="/focus" element={<focusTab />} />
       <Route path="/notes" element={<notesTab />} />
       <Route path="/recommendation" element={<recommendationsTab />} />
+      <Route path="/teacher/dashboardNew" element={<TeacherDashboardNew />} />
     </Routes>
   );
 }

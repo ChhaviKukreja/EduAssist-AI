@@ -1,6 +1,6 @@
-require('dotenv').config
+//require('dotenv').config
 const express = require("express");
-const { Student, Teacher, Assignment, Submission } = require("../db")
+const { Student, Teacher, Assignment, Submission } = require("../db");
 const teacherMiddleware = require("../middleware/teacher");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
@@ -8,20 +8,20 @@ const { JWT_SECRET } = require("../config");
 const { z } = require("zod");
 const cors = require("cors");
 router.use(cors());
+const sharp = require("sharp");
+const { exec, spawn } = require("child_process");
+const fs = require("fs").promises;
+const path = require("path");
+const multer = require("multer");
+const vision = require("@google-cloud/vision");
+const pdfPoppler = require("pdf-poppler");
+const bcrypt = require("bcrypt");
+const upload = multer();
 
-const { spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const client = new vision.ImageAnnotatorClient({ keyFilename: "gcloud-key.json" });
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_API_KEY}`;
-
-
-const multer = require('multer');
-const storage = multer.memoryStorage(); // stores file in memory
-const upload = multer({ storage: storage });
-
-const bcrypt = require("bcrypt");
 
 const signupSchema = z.object({
     firstName: z.string().min(2, "First name must have at least 2 characters"),
@@ -107,23 +107,121 @@ router.get("/auth/check", teacherMiddleware, (req, res) => {
     res.status(200).json({ username: req.username }); // Send back the authenticated user's details
 });
 
-// Upload Assignment
-router.post("/assignments", teacherMiddleware, upload.single('pdf'), async (req, res) => {
-    const { title, description, dueDate } = req.body;
-    console.log("hello1")
-    try {
-        console.log("inside try");
-        const newAssignment = new Assignment({
-            title, description, dueDate,
-            uploadedBy: req.email,
-            pdf: {
-                data: req.file.buffer,
-                contentType: req.file.mimetype
+// Function to Extract Images from PDF using Python
+async function extractImagesFromPDF(pdfPath, outputDir) {
+    return new Promise((resolve, reject) => {
+        const scriptPath = path.join(__dirname, "..", "extract_images.py"); // Correct script path
+        const command = `python "${scriptPath}" "${pdfPath}" "${outputDir}"`;
+
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error("Error extracting images:", stderr);
+                return reject(error);
             }
+            console.log("Image Extraction Output:", stdout);
+            resolve();
         });
-        console.log("Assignment created", newAssignment);
+    });
+}
+
+// Convert PDF to Images
+async function pdfToImages(pdfBuffer, outputPath) {
+    try {
+        const pdfPath = `${outputPath}.pdf`;
+        await fs.writeFile(pdfPath, pdfBuffer);
+
+        // Extract images from PDF
+        await extractImagesFromPDF(pdfPath, path.dirname(outputPath));
+
+        // Get extracted images
+        const imageFiles = (await fs.readdir(path.dirname(outputPath)))
+            .filter(file => file.startsWith("extracted_") && file.endsWith(".png"))
+            .map(file => path.join(path.dirname(outputPath), file));
+
+        console.log("Extracted Image Files:", imageFiles);
+
+        if (imageFiles.length === 0) throw new Error("No images were generated from the PDF.");
+
+        return imageFiles;
+    } catch (error) {
+        console.error("Error converting PDF to images:", error);
+        return [];
+    }
+}
+
+// OCR Processing Function
+async function processOCR(imagePath) {
+    try {
+        const [result] = await client.documentTextDetection({ image: { content: await fs.readFile(imagePath) } });
+        const annotation = result.fullTextAnnotation;
+        return annotation ? annotation.text : "";
+    } catch (error) {
+        console.error("Error processing OCR:", error);
+        return null;
+    }
+}
+
+// Detect Handwriting in Image
+async function detectHandwriting(imagePath) {
+    try {
+        const [result] = await client.documentTextDetection({ image: { content: await fs.readFile(imagePath) } });
+        return result.fullTextAnnotation && result.fullTextAnnotation.pages.length > 0;
+    } catch (error) {
+        console.error("Error detecting handwriting:", error);
+        return false;
+    }
+}
+
+// Route to Upload & Process Assignment
+router.post("/assignments", upload.single("pdf"), async (req, res) => {
+    const { title, dueDate, description, email } = req.body;
+
+    try {
+        if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+
+        const pdfBuffer = req.file.buffer;
+        const tempOutputPath = `./temp/${title.replace(/\s+/g, "-")}`;
+        let extractedText = null;
+
+        // Convert PDF to Images
+        const imageFiles = await pdfToImages(pdfBuffer, tempOutputPath);
+        if (imageFiles.length === 0) return res.status(500).json({ error: "Failed to process PDF to images" });
+
+        // Read images as Buffer
+        const imageBuffers = await Promise.all(imageFiles.map(async (imagePath) => {
+            return {
+                data: await fs.readFile(imagePath),
+                contentType: "image/png"
+            };
+        }));
+
+        // Check if Document is Handwritten
+        const isHandwritten = await detectHandwriting(imageFiles[0]);
+
+        if (isHandwritten) {
+            console.log("Handwritten document detected. Processing OCR...");
+            const ocrResults = await Promise.all(imageFiles.map(processOCR));
+            extractedText = ocrResults.join("\n");
+        } else {
+            console.log("Typed document detected. Storing directly...");
+        }
+
+        // Create a new assignment
+        const newAssignment = new Assignment({
+            title,
+            description,
+            dueDate,
+            uploadedBy: email,
+            pdf: {
+                data: pdfBuffer,
+                contentType: req.file.mimetype,
+            },
+            extractedImages: imageBuffers,
+            extractedText: extractedText || null,
+        });
+
         await newAssignment.save();
-        console.log("Assignment saved")
+        console.log("Assignment saved:", newAssignment);
 
         const assignmentId = newAssignment._id;
 
@@ -137,7 +235,51 @@ router.post("/assignments", teacherMiddleware, upload.single('pdf'), async (req,
         res.status(201).json(newAssignment);
 
     } catch (error) {
+        console.error("Error creating assignment:", error);
         res.status(500).json({ error: "Failed to create assignment" });
+    }
+});
+
+router.get('/assignments/:id', async (req, res) => {
+    try {
+        console.log("Fetching PDF for assignment ID:", req.params.id);
+
+        const assignment = await Assignment.findById(req.params.id);
+        if (!assignment) {
+            return res.status(404).json({ message: "Assignment not found" });
+        }
+
+        if (!assignment.pdf || !assignment.pdf.data) {
+            return res.status(400).json({ message: "PDF not available" });
+        }
+
+        res.setHeader('Content-Type', assignment.pdf.contentType);
+        res.setHeader('Content-Disposition', 'inline; filename="assignment.pdf"');
+        res.send(assignment.pdf.data);
+
+    } catch (error) {
+        console.error("Error fetching PDF:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.get("/assignments/:id/images", async (req, res) => {
+    try {
+        const assignment = await Assignment.findById(req.params.id);
+        if (!assignment || !assignment.extractedImages.length) {
+            return res.status(404).json({ message: "No images found" });
+        }
+
+        // Send images as Base64
+        const images = assignment.extractedImages.map(img => ({
+            contentType: img.contentType,
+            base64: img.data.toString("base64"),
+        }));
+
+        res.json({ images });
+    } catch (error) {
+        console.error("Error fetching images:", error);
+        res.status(500).json({ error: "Failed to retrieve images" });
     }
 });
 
@@ -273,119 +415,119 @@ router.post("/grade/batch", async (req, res) => {
 });
 
 router.get('/analytics', teacherMiddleware, async (req, res) => {
-  try {
-    console.log("insideeee")
-    // Fetch all assignments and submissions for the authenticated teacher
-    const assignments = await Assignment.find();
-    const submissions = await Submission.find({
-      assignmentId: { $in: assignments.map(a => a._id) }
-    });
-    // Calculate Grade Distribution
-    const calculateGradeDistribution = (submissions) => {
-      const gradeRanges = {
-        'A': { min: 70, max: 100 },
-        'B': { min: 60, max: 69 },
-        'C': { min: 50, max: 59 },
-        'D': { min: 0, max: 49 }
-      };
-
-      const distribution = {
-        'A': 0,
-        'B': 0,
-        'C': 0,
-        'D': 0
-      };
-
-      submissions.forEach(submission => {
-        const score = submission.score;
-        if (score >= gradeRanges['A'].min) distribution['A']++;
-        else if (score >= gradeRanges['B'].min) distribution['B']++;
-        else if (score >= gradeRanges['C'].min) distribution['C']++;
-        else distribution['D']++;
-      });
-
-      // Convert to percentages
-      const total = submissions.length;
-      Object.keys(distribution).forEach(grade => {
-        distribution[grade] = Math.round((distribution[grade] / total) * 100);
-      });
-
-      return distribution;
-    };
-
-    // Calculate Submission Status
-    const calculateSubmissionStatus = (assignments, submissions) => {
-      const now = new Date();
-      const status = {
-        'On Time': 0,
-        'Late': 0,
-        'Missing': 0
-      };
-
-      assignments.forEach(assignment => {
-        const dueDate = new Date(assignment.dueDate);
-        const assignmentSubmissions = submissions.filter(
-          sub => sub.assignmentId.toString() === assignment._id.toString()
-        );
-
-        const totalStudents = 3; // You might want to replace this with actual total students
-
-        assignmentSubmissions.forEach(submission => {
-          const submittedDate = new Date(submission.submittedAt);
-          if (submittedDate <= dueDate) status['On Time']++;
-          else status['Late']++;
+    try {
+        console.log("insideeee")
+        // Fetch all assignments and submissions for the authenticated teacher
+        const assignments = await Assignment.find();
+        const submissions = await Submission.find({
+            assignmentId: { $in: assignments.map(a => a._id) }
         });
+        // Calculate Grade Distribution
+        const calculateGradeDistribution = (submissions) => {
+            const gradeRanges = {
+                'A': { min: 80, max: 100 },
+                'B': { min: 60, max: 79 },
+                'C': { min: 40, max: 59 },
+                'D/F': { min: 0, max: 39 }
+            };
 
-        // Calculate missing submissions
-        const missingSubmissions = totalStudents - assignmentSubmissions.length;
-        status['Missing'] += missingSubmissions;
-      });
+            const distribution = {
+                'A': 0,
+                'B': 0,
+                'C': 0,
+                'D/F': 0
+            };
 
-      // Convert to percentages
-      const total = submissions.length + status['Missing'];
-      Object.keys(status).forEach(key => {
-        status[key] = Math.round((status[key] / total) * 100);
-      });
+            submissions.forEach(submission => {
+                const score = submission.score;
+                if (score >= gradeRanges['A'].min) distribution['A']++;
+                else if (score >= gradeRanges['B'].min) distribution['B']++;
+                else if (score >= gradeRanges['C'].min) distribution['C']++;
+                else distribution['D/F']++;
+            });
 
-      return status;
-    };
+            // Convert to percentages
+            const total = submissions.length;
+            Object.keys(distribution).forEach(grade => {
+                distribution[grade] = Math.round((distribution[grade] / total) * 100);
+            });
 
-    // Calculate Performance Metrics
-    const calculatePerformanceMetrics = (submissions) => {
-      if (submissions.length === 0) {
-        return {
-          'Average Score': 'N/A',
-          'Total Submissions': '0',
-          'Highest Score': 'N/A',
-          'Lowest Score': 'N/A'
+            return distribution;
         };
-      }
 
-      const scores = submissions.map(sub => sub.score);
-      
-      return {
-        'Average Score': (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1),
-        'Total Submissions': submissions.length.toString(),
-        'Highest Score': Math.max(...scores).toString(),
-        'Lowest Score': Math.min(...scores).toString()
-      };
-    };
+        // Calculate Submission Status
+        const calculateSubmissionStatus = (assignments, submissions) => {
+            const now = new Date();
+            const status = {
+                'On Time': 0,
+                'Late': 0,
+                'Missing': 0
+            };
 
-    // Compile analytics
-    const analytics = {
-      gradeDistribution: calculateGradeDistribution(submissions),
-      submissionStatus: calculateSubmissionStatus(assignments, submissions),
-      performanceMetrics: calculatePerformanceMetrics(submissions)
-    };
+            assignments.forEach(assignment => {
+                const dueDate = new Date(assignment.dueDate);
+                const assignmentSubmissions = submissions.filter(
+                    sub => sub.assignmentId.toString() === assignment._id.toString()
+                );
 
-    res.json(analytics);
-  } catch (error) {
-    console.error('Analytics calculation error:', error);
-    res.status(500).json({ 
-      message: 'Error calculating analytics', 
-      error: error.message 
-    });
-  }
+                const totalStudents = 1; // You might want to replace this with actual total students
+
+                assignmentSubmissions.forEach(submission => {
+                    const submittedDate = new Date(submission.submittedAt);
+                    if (submittedDate <= dueDate) status['On Time']++;
+                    else status['Late']++;
+                });
+
+                // Calculate missing submissions
+                const missingSubmissions = totalStudents - assignmentSubmissions.length;
+                status['Missing'] += missingSubmissions;
+            });
+
+            // Convert to percentages
+            const total = submissions.length + status['Missing'];
+            Object.keys(status).forEach(key => {
+                status[key] = Math.round((status[key] / total) * 100);
+            });
+
+            return status;
+        };
+
+        // Calculate Performance Metrics
+        const calculatePerformanceMetrics = (submissions) => {
+            if (submissions.length === 0) {
+                return {
+                    'Average Score': 'N/A',
+                    'Total Submissions': '0',
+                    'Highest Score': 'N/A',
+                    'Lowest Score': 'N/A'
+                };
+            }
+
+            const scores = submissions.map(sub => sub.score);
+
+            return {
+                'Average Score': (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1),
+                'Total Submissions': submissions.length.toString(),
+                'Highest Score': Math.max(...scores).toString(),
+                'Lowest Score': Math.min(...scores).toString()
+            };
+        };
+
+        // Compile analytics
+        const analytics = {
+            gradeDistribution: calculateGradeDistribution(submissions),
+            submissionStatus: calculateSubmissionStatus(assignments, submissions),
+            performanceMetrics: calculatePerformanceMetrics(submissions)
+        };
+
+        res.json(analytics);
+    } catch (error) {
+        console.error('Analytics calculation error:', error);
+        res.status(500).json({
+            message: 'Error calculating analytics',
+            error: error.message
+        });
+    }
 });
 
 module.exports = router;

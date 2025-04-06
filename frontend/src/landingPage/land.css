@@ -28,6 +28,21 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: #63b3ed;
 }
+.logo-image {
+  max-height: 60px;
+  width: auto;
+  /* Ensures the logo maintains its aspect ratio */
+  object-fit: contain;
+  /* Optional: if you want to ensure the cyan color remains consistent */
+  filter: brightness(1) contrast(1.05);
+}
+
+/* Make the logo responsive */
+@media (max-width: 768px) {
+  .logo-image {
+    max-height: 40px;
+  }
+}
 
 /* Fade-in animation for sections */
 @keyframes fadeInDark {

@@ -127,7 +127,7 @@ router.get('/download-submission/:submissionId', async (req, res) => {
     }
 });
 
-router.get('/assignments',studentMiddleware, async (req, res) => {
+router.get('/assignments', studentMiddleware, async (req, res) => {
     try {
         console.log("inside try");
         const student = await Student.findOne({ email: req.email }).populate('todoAssignments');
@@ -139,11 +139,58 @@ router.get('/assignments',studentMiddleware, async (req, res) => {
     }
 });
 
+const mongoose = require('mongoose');
+const pdfParse = require('pdf-parse');
 
-
-router.post("/submit-assignment/:username/:assignmentId", upload.single("pdf"), async (req, res) => {
+router.get('/assignments/:id', async (req, res) => {
     try {
-        const { username, assignmentId } = req.params;
+        console.log("Fetching PDF for assignment ID:", req.params.id);
+
+        const assignment = await Assignment.findById(req.params.id);
+        if (!assignment) {
+            return res.status(404).json({ message: "Assignment not found" });
+        }
+
+        if (!assignment.pdf || !assignment.pdf.data) {
+            return res.status(400).json({ message: "PDF not available" });
+        }
+
+        res.setHeader('Content-Type', assignment.pdf.contentType);
+        res.setHeader('Content-Disposition', 'inline; filename="assignment.pdf"');
+        res.send(assignment.pdf.data);
+
+    } catch (error) {
+        console.error("Error fetching PDF:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.get('/submissions/:id', async (req, res) => {
+    try {
+        console.log("Fetching PDF for submission ID:", req.params.id);
+
+        const submission = await Submission.findById(req.params.id);
+        if (!submission) {
+            return res.status(404).json({ message: "Submission not found" });
+        }
+
+        if (!submission.pdf || !submission.pdf.data) {
+            return res.status(400).json({ message: "PDF not available" });
+        }
+
+        res.setHeader('Content-Type', submission.pdf.contentType);
+        res.setHeader('Content-Disposition', 'inline; filename="submission.pdf"');
+        res.send(submission.pdf.data);
+
+    } catch (error) {
+        console.error("Error fetching PDF:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.post("/submit-assignment/:username/:assignmentId/:title", upload.single("pdf"), async (req, res) => {
+    try {
+        const { username, assignmentId, title } = req.params;
 
         if (!username || !assignmentId) {
             return res.status(400).json({ message: "Missing required fields" });
@@ -165,10 +212,11 @@ router.post("/submit-assignment/:username/:assignmentId", upload.single("pdf"), 
 
         // Remove assignment from todoAssignments
         student.todoAssignments = student.todoAssignments.filter(id => id.toString() !== assignmentId);
-        
+
         // Create a new submission entry
         const newSubmission = new Submission({
             studentEmail: username,
+            title,
             assignmentId,
             pdf: {
                 data: req.file.buffer,
@@ -189,10 +237,10 @@ router.post("/submit-assignment/:username/:assignmentId", upload.single("pdf"), 
         assignment.specificSubmission.push(newSubmission._id);
         await assignment.save();
 
-      
-          // Log the result of the update
+
+        // Log the result of the update
         //   console.log("Update result:", updateResult);
-      
+
         //   if (updateResult.nModified === 0) {
         //     throw new Error("Failed to update organiser with the new event.");
         //   }
@@ -206,10 +254,30 @@ router.post("/submit-assignment/:username/:assignmentId", upload.single("pdf"), 
 
 router.get('/submissions', studentMiddleware, async (req, res) => {
     try {
-        const student = await Student.findOne({ email: req.email }).populate('submittedAssignments');
+        const student = await Student.findOne({ email: req.email })
+            .populate({
+                path: 'submittedAssignments',
+                populate: {
+                    path: 'assignmentId', // This will populate the assignment details inside each submission
+                }
+            });
+
         res.json(student.submittedAssignments);
     } catch (error) {
         console.error("Error fetching submitted assignments:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.get('/assignment/:id', async (req, res) => {
+    try {
+        const assignment = await Assignment.findById(req.params.id)
+        if (!assignment) {
+            return res.status(404).json({ message: "Assignment not found" });
+        }
+        res.json({ title: assignment.title });
+    } catch (error) {
+        console.error("Error fetching assignment:", error);
         res.status(500).json({ message: "Server error" });
     }
 });

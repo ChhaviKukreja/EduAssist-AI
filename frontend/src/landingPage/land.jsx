@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Check, Book, Brain, FileText, BarChart3, MessageCircle, Search, Video } from 'lucide-react';
+import { ArrowRight, Check, Book, Brain, FileText, BarChart3, MessageCircle, Search, Video, BarChart } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import './land.css';
+import EduAssistLogo from "../assets/final logo.png";
+import Landing from "../assets/landing.png";
 
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 10) {
@@ -15,7 +17,7 @@ const LandingPage = () => {
         setIsScrolled(false);
       }
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -33,8 +35,14 @@ const LandingPage = () => {
       {/* Navigation Bar */}
       <nav className={`fixed w-full z-10 transition-all duration-300 ${isScrolled ? 'bg-gray-800 shadow-md py-2' : 'bg-transparent py-4'}`}>
         <div className="container mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center">
-            <Link to="/" className="text-2xl font-bold text-cyan-400">EduGenius</Link>
+          <div className="logo-container">
+            <a href="/">
+              <img
+                src={EduAssistLogo}
+                alt="EduAssist Logo"
+                className="logo-image"
+              />
+            </a>
           </div>
           <div className="hidden md:flex space-x-10">
             <a href="#features" className="text-gray-300 hover:text-cyan-400 transition">Features</a>
@@ -42,13 +50,13 @@ const LandingPage = () => {
             <a href="#testimonials" className="text-gray-300 hover:text-cyan-400 transition">Testimonials</a>
           </div>
           <div>
-            <button 
+            <button
               onClick={handleSignupClick}
               className="bg-cyan-600 text-white py-2 px-6 rounded-full hover:bg-cyan-700 transition mr-4"
             >
               Sign Up
             </button>
-            <button 
+            <button
               onClick={handleLoginClick}
               className="border border-cyan-600 text-cyan-400 py-2 px-6 rounded-full hover:bg-gray-800 transition"
             >
@@ -61,16 +69,16 @@ const LandingPage = () => {
       {/* Hero Section */}
       <header className="pt-32 pb-20 px-4">
         <div className="container mx-auto flex flex-col md:flex-row items-center">
-          <div className="md:w-1/2 mb-10 md:mb-0">
+          <div className="flex-1 pr-0 md:pr-0 mb-8 md:mb-0 ml-6">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-100 leading-tight">
-              Transform Teaching with 
+              Transform Teaching with
               <span className="text-cyan-400"> AI-Powered</span> Assistance
             </h1>
             <p className="mt-6 text-lg text-gray-400 max-w-md">
               Automate grading, provide personalized feedback, and save countless hours with our intelligent education platform.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-              <button 
+              <button
                 onClick={handleSignupClick}
                 className="bg-cyan-600 text-white py-3 px-8 rounded-full hover:bg-cyan-700 transition flex items-center justify-center"
               >
@@ -81,11 +89,11 @@ const LandingPage = () => {
               </button>
             </div>
           </div>
-          <div className="md:w-1/2">
-            <img 
-              src="/api/placeholder/600/400" 
-              alt="AI Teaching Assistant Dashboard" 
-              className="rounded-lg shadow-2xl border-4 border-gray-700"
+          <div className="w-full md:w-1/2 flex justify-center items-center">
+            <img
+              src={Landing}
+              alt="AI Teaching Assistant Dashboard"
+              className="w-[105%] max-w-lg rounded-lg"
             />
           </div>
         </div>
@@ -100,7 +108,7 @@ const LandingPage = () => {
               Our AI-powered platform helps teachers save time and improve student outcomes
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature 1: AI-Based Assignment Grading */}
             <div className="bg-gray-800 p-8 rounded-xl hover:bg-gray-700 transition feature-card">
@@ -112,7 +120,7 @@ const LandingPage = () => {
                 Our AI scans written or typed assignments and automatically grades them, saving teachers hours of manual work.
               </p>
             </div>
-            
+
             {/* Feature 2: Personalized Feedback Generator */}
             <div className="bg-gray-800 p-8 rounded-xl hover:bg-gray-700 transition feature-card">
               <div className="bg-purple-800 p-3 rounded-lg inline-block">
@@ -123,18 +131,18 @@ const LandingPage = () => {
                 AI analyzes student work and provides detailed feedback on mistakes and areas for improvement.
               </p>
             </div>
-            
+
             {/* Feature 3: Plagiarism & Grammar Checker */}
             <div className="bg-gray-800 p-8 rounded-xl hover:bg-gray-700 transition feature-card">
               <div className="bg-green-800 p-3 rounded-lg inline-block">
-                <Search className="text-green-300 h-6 w-6" />
+                <BarChart className="text-green-300 h-6 w-6" />
               </div>
-              <h3 className="text-xl font-semibold mt-4 text-gray-100">Plagiarism & Grammar Checker</h3>
+              <h3 className="text-xl font-semibold mt-4 text-gray-100">Performance Analytics & Visualizations</h3>
               <p className="mt-2 text-gray-400">
-                AI checks for plagiarism and analyzes grammar and clarity in student writing, encouraging originality.
+              Performance analytics with visual reports that help students track their progress and enable teachers to identify learning trends at a glance.
               </p>
             </div>
-            
+
             {/* Feature 4: Smart Quiz & Exam Evaluation */}
             <div className="bg-gray-800 p-8 rounded-xl hover:bg-gray-700 transition feature-card">
               <div className="bg-red-800 p-3 rounded-lg inline-block">
@@ -145,7 +153,7 @@ const LandingPage = () => {
                 Teachers can upload quizzes and exams, and AI automatically grades them, reducing marking time.
               </p>
             </div>
-            
+
             {/* Feature 5: Adaptive Learning Suggestions */}
             <div className="bg-gray-800 p-8 rounded-xl hover:bg-gray-700 transition feature-card">
               <div className="bg-yellow-800 p-3 rounded-lg inline-block">
@@ -156,7 +164,7 @@ const LandingPage = () => {
                 AI recommends learning resources based on a student's weaknesses, providing personalized study materials.
               </p>
             </div>
-            
+
             {/* Feature 6: Teacher Dashboard */}
             <div className="bg-gray-800 p-8 rounded-xl hover:bg-gray-700 transition feature-card">
               <div className="bg-orange-800 p-3 rounded-lg inline-block">
@@ -180,7 +188,7 @@ const LandingPage = () => {
               Our platform simplifies the teaching process from start to finish
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Step 1 */}
             <div className="bg-gray-900 p-8 rounded-xl text-center hover:bg-gray-800 transition feature-card">
@@ -192,7 +200,7 @@ const LandingPage = () => {
                 Teachers upload assignments through our intuitive dashboard or integrate with existing systems.
               </p>
             </div>
-            
+
             {/* Step 2 */}
             <div className="bg-gray-900 p-8 rounded-xl text-center hover:bg-gray-800 transition feature-card">
               <div className="bg-gray-700 inline-flex rounded-full p-3 mb-4">
@@ -203,7 +211,7 @@ const LandingPage = () => {
                 Our advanced AI analyzes student submissions for content, accuracy, and originality.
               </p>
             </div>
-            
+
             {/* Step 3 */}
             <div className="bg-gray-900 p-8 rounded-xl text-center hover:bg-gray-800 transition feature-card">
               <div className="bg-gray-700 inline-flex rounded-full p-3 mb-4">
@@ -218,61 +226,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-20 bg-gray-900">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-100">What Educators Are Saying</h2>
-            <p className="mt-4 text-xl text-gray-400 max-w-2xl mx-auto">
-              Teachers love how our platform transforms their classroom experience
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Testimonial 1 */}
-            <div className="bg-gray-800 p-8 rounded-xl hover:bg-gray-700 transition feature-card">
-              <div className="flex items-center mb-4">
-                <img src="/api/placeholder/60/60" alt="Teacher" className="rounded-full border-2 border-gray-600" />
-                <div className="ml-4">
-                  <h4 className="font-semibold text-lg text-gray-100">Sarah Johnson</h4>
-                  <p className="text-gray-400">High School English Teacher</p>
-                </div>
-              </div>
-              <p className="text-gray-300 italic">
-                "This platform has saved me countless hours grading essays. The feedback it provides is surprisingly thorough and personalized."
-              </p>
-            </div>
-            
-            {/* Testimonial 2 */}
-            <div className="bg-gray-800 p-8 rounded-xl hover:bg-gray-700 transition feature-card">
-              <div className="flex items-center mb-4">
-                <img src="/api/placeholder/60/60" alt="Teacher" className="rounded-full border-2 border-gray-600" />
-                <div className="ml-4">
-                  <h4 className="font-semibold text-lg text-gray-100">Michael Rodriguez</h4>
-                  <p className="text-gray-400">Middle School Math Teacher</p>
-                </div>
-              </div>
-              <p className="text-gray-300 italic">
-                "The adaptive learning suggestions have been a game-changer for my students who were struggling with certain concepts."
-              </p>
-            </div>
-            
-            {/* Testimonial 3 */}
-            <div className="bg-gray-800 p-8 rounded-xl hover:bg-gray-700 transition feature-card">
-              <div className="flex items-center mb-4">
-                <img src="/api/placeholder/60/60" alt="Teacher" className="rounded-full border-2 border-gray-600" />
-                <div className="ml-4">
-                  <h4 className="font-semibold text-lg text-gray-100">Jennifer Lee</h4>
-                  <p className="text-gray-400">Elementary School Teacher</p>
-                </div>
-              </div>
-              <p className="text-gray-300 italic">
-                "The dashboard helps me quickly identify which students need extra attention. I can now spend more time teaching and less time on paperwork."
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      
 
       {/* CTA Section */}
       <section className="py-20 bg-gray-800 text-white">
@@ -282,7 +236,7 @@ const LandingPage = () => {
             Join thousands of educators who are saving time and improving student outcomes with our AI-powered platform.
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-            <button 
+            <button
               onClick={handleSignupClick}
               className="bg-cyan-600 text-white py-3 px-8 rounded-full hover:bg-cyan-700 transition font-semibold"
             >
@@ -300,7 +254,7 @@ const LandingPage = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-2xl font-bold mb-4 text-cyan-400">EduGenius</h3>
+              <h3 className="text-2xl font-bold mb-4 text-cyan-400">EduAssist</h3>
               <p className="text-gray-400">
                 Transforming education with AI-powered assistance for teachers and personalized learning for students.
               </p>
@@ -326,9 +280,9 @@ const LandingPage = () => {
             <div>
               <h4 className="text-lg font-semibold mb-4 text-gray-200">Contact</h4>
               <ul className="space-y-2">
-                <li className="text-gray-400">info@edugenius.com</li>
-                <li className="text-gray-400">1-800-EDU-GENIUS</li>
-                <li className="text-gray-400">123 Learning Lane, Education City</li>
+                <li className="text-gray-400">support@eduassist.io</li>
+                <li className="text-gray-400">help.eduassist.io</li>
+                <li className="text-gray-400">community.eduassist.io</li>
               </ul>
               <div className="mt-4 flex space-x-4">
                 <a href="#" className="text-gray-400 hover:text-cyan-400 transition">
@@ -344,11 +298,11 @@ const LandingPage = () => {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500">
-            <p>© 2025 EduGenius. All rights reserved.</p>
+            <p>© 2025 EduAssist. All rights reserved.</p>
           </div>
         </div>
       </footer>
-    </div>
+    </div>  
   );
 };
 
